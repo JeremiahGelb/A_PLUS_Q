@@ -57,6 +57,8 @@ void test_simulation_timer()
 {
     SimulationTimer timer;
     ASSERT(timer.time() == 0, "initial time wasn't 0");
+
+    timer.register_job(timer.time() + 1, [] {});
 }
 
 } // testing
