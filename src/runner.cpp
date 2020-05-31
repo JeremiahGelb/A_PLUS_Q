@@ -4,9 +4,7 @@
 #include "test.h"
 
 void run_tests() {
-    std::cout << "Starting Tests" << std::endl;
     testing::run_all_tests();
-    std::cout << "Testing complete" << std::endl;
 }
 
 int main(int argc, char ** argv) {
@@ -14,6 +12,10 @@ int main(int argc, char ** argv) {
 
     for (auto i = 0; i < argc; ++i) {
         args.push_back(std::string(argv[i]));
+    }
+
+    if (args.size() == 1) {
+        std::cout << "You forgot the args" << std::endl;
     }
 
     for (const auto & arg : args) {

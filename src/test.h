@@ -9,5 +9,6 @@ void run_all_tests();
 // tests
 
 void test_tests();
+void test_simulation_timer();
 
 } // testing
