@@ -13,10 +13,12 @@ public:
 
     inline void register_job(uint32_t start_time, std::function<void()> callback)
     {
-        jobs.insert({start_time, callback});
+        jobs_.insert({start_time, callback});
     }
+
+    void advance_time();
 
 private:
     std::uint32_t time_;
-    std::multimap<uint32_t, std::function<void()>> jobs;
+    std::multimap<uint32_t, std::function<void()>> jobs_;
 };

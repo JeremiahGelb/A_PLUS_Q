@@ -1,6 +1,23 @@
 #pragma once
 
+#include <string>
+
 namespace testing {
+
+struct TestFailure : public std::exception
+{
+    TestFailure(const std::string & info)
+    : info_(info)
+    {
+    }
+
+    const std::string info_;
+	const char * what () const throw ()
+    {
+    	return info_.c_str();
+    }
+};
+
 
 void ASSERT(bool condition, const std::string & explanation = "");
 
