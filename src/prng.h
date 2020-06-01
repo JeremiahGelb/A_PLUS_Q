@@ -1,16 +1,24 @@
-
+#pragma once
 
 namespace prng {
 
-class ExponentialGenerator {
+class RandomNumberGenerator {
 public:
-    ExponentialGenerator(long seed = 0)
+    RandomNumberGenerator(long seed = 0)
     : seed_(seed)
     {}
-
-    float generate();
-private:
+    virtual float generate() = 0;
+protected:
     long seed_;
+};
+
+class ExponentialGenerator : public RandomNumberGenerator {
+public:
+    ExponentialGenerator(long seed = 0)
+    : RandomNumberGenerator(seed)
+    {}
+
+    float generate() override;
 };
 
 } // namespace prng
