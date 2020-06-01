@@ -9,6 +9,7 @@
 #include "simulation_timer.h"
 #include "customer.h"
 #include "prng.h"
+#include "incoming_customers.h"
 
 namespace {
     Color::Modifier red(Color::FG_RED);
