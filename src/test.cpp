@@ -7,6 +7,7 @@
 #include "test.h"
 #include "colormod.h"
 #include "simulation_timer.h"
+#include "customer.h"
 
 namespace {
     Color::Modifier red(Color::FG_RED);
@@ -29,7 +30,8 @@ void run_all_tests()
     std::vector<std::pair<std::string, std::function<void()>>> tests = {
         std::make_pair("Blank", [] {}),
         std::make_pair("Test", test_tests),
-        std::make_pair("Simulation Timer", test_simulation_timer)
+        std::make_pair("Simulation Timer", test_simulation_timer),
+        std::make_pair("Customer", test_customer)
     };
 
 
@@ -89,5 +91,49 @@ void test_simulation_timer()
     } catch(std::runtime_error &) {}
 
 }
+
+void test_customer()
+{
+    constexpr auto kFirstCustomerId = 1;
+    constexpr auto kFirstCustomerArrivalTime = 2;
+    constexpr auto kFirstCustomerServiceTime = 3;
+
+    constexpr auto kDefaultServiced = false;
+    constexpr auto kDefaultDepartureTime = 0;
+
+    auto first_customer = customer::make_customer(kFirstCustomerId,
+                                                  kFirstCustomerArrivalTime,
+                                                  kFirstCustomerServiceTime);
+
+    ASSERT(first_customer->id() == kFirstCustomerId, "initial id matches");
+    ASSERT(first_customer->arrival_time() == kFirstCustomerArrivalTime, "initial arrival time matches");
+    ASSERT(first_customer->service_time() == kFirstCustomerServiceTime, "initial service time matches");
+    ASSERT(first_customer->serviced() == kDefaultServiced, "initial serviced matches");
+    ASSERT(first_customer->departure_time() == kDefaultDepartureTime, "initial departure time matches");
+
+    constexpr auto new_serviced = true;
+    constexpr auto new_departure_time = 10;
+
+    first_customer->set_serviced(new_serviced);
+    first_customer->set_departure_time(new_departure_time);
+
+    ASSERT(first_customer->serviced() == new_serviced, "new serviced matches");
+    ASSERT(first_customer->departure_time() == new_departure_time, "new departure time matches");
+
+    auto first_customer_string = first_customer->to_string();
+    const std::string kExpectedString = "1,2,3,1,10\n";
+    std::cout << first_customer_string;
+    ASSERT(first_customer_string == kExpectedString, "to string works as expected");
+
+    auto second_customer = customer::make_customer(kExpectedString);
+    ASSERT(second_customer->id() == kFirstCustomerId, "second_customer id matches");
+    ASSERT(second_customer->arrival_time() == kFirstCustomerArrivalTime, "second_customer arrival time matches");
+    ASSERT(second_customer->service_time() == kFirstCustomerServiceTime, "second_customer service time matches");
+    ASSERT(second_customer->serviced() == new_serviced, "second_customer serviced matches");
+    ASSERT(second_customer->departure_time() == new_departure_time, "second_customer departure time matches");
+
+    ASSERT(*first_customer == *second_customer, "customer == works");
+}
+
 
 } // testing

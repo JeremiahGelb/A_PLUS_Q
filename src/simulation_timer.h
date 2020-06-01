@@ -7,7 +7,8 @@
 class SimulationTimer {
 public:
     SimulationTimer();
-    inline std::uint32_t time(){
+    inline std::uint32_t time()
+    {
         return time_;
     }
 

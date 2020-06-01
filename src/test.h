@@ -27,5 +27,6 @@ void run_all_tests();
 
 void test_tests();
 void test_simulation_timer();
+void test_customer();
 
 } // testing
