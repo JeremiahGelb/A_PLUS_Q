@@ -24,9 +24,9 @@ void ASSERT(bool condition, const std::string & explanation = "");
 void run_all_tests();
 
 // tests
-
 void test_tests();
 void test_simulation_timer();
 void test_customer();
+void test_prng();
 
 } // testing

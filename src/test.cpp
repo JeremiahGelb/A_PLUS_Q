@@ -8,6 +8,7 @@
 #include "colormod.h"
 #include "simulation_timer.h"
 #include "customer.h"
+#include "prng.h"
 
 namespace {
     Color::Modifier red(Color::FG_RED);
@@ -31,25 +32,37 @@ void run_all_tests()
         std::make_pair("Blank", [] {}),
         std::make_pair("Test", test_tests),
         std::make_pair("Simulation Timer", test_simulation_timer),
-        std::make_pair("Customer", test_customer)
+        std::make_pair("Customer", test_customer),
+        std::make_pair("prng", test_prng)
     };
 
-
+    auto failure_count = 0;
+    auto unhandled_exception_count = 0;
     for (const auto & test : tests) {
         try {
             std::cout << std::endl <<  "Starting test: " << test.first << std::endl;
             test.second();
             std::cout << green << "Passed test: " << def << test.first << std::endl;
         } catch (TestFailure & e) {
+            ++failure_count;
             std::cout << red <<  "Failed test: " << def <<  test.first << std::endl;
             std::cout << "explanation: " << e.what() << std::endl;
         } catch (std::exception & e) {
+            ++unhandled_exception_count;
             std::cout << red <<  "Caught unhandled exception in test: " << def <<  test.first << std::endl;
             std::cout << "explanation: " << e.what() << std::endl;           
         }
     }
 
-    std::cout << std::endl;
+    constexpr auto kExpectedFailures = 1; // test_tests
+    constexpr auto kExpectedUnhandledExceptions = 0;
+
+    if (failure_count == kExpectedFailures 
+        && unhandled_exception_count == kExpectedUnhandledExceptions) {
+        std::cout << std::endl << green << "Overall Pass!" << def << std::endl;
+    } else {
+        std::cout << std::endl << red << "Overall Fail!" << def << std::endl;
+    }
 }
 
 void test_tests()
@@ -122,7 +135,6 @@ void test_customer()
 
     auto first_customer_string = first_customer->to_string();
     const std::string kExpectedString = "1,2,3,1,10\n";
-    std::cout << first_customer_string;
     ASSERT(first_customer_string == kExpectedString, "to string works as expected");
 
     auto second_customer = customer::make_customer(kExpectedString);
@@ -133,6 +145,26 @@ void test_customer()
     ASSERT(second_customer->departure_time() == new_departure_time, "second_customer departure time matches");
 
     ASSERT(*first_customer == *second_customer, "customer == works");
+}
+
+void test_prng()
+{
+    long kSeed = 12345;
+    prng::ExponentialGenerator default_exp_gen;
+    prng::ExponentialGenerator seeded_exp_gen(kSeed);
+    prng::ExponentialGenerator same_seeded_exp_gen(kSeed);
+
+    auto first_default_float = default_exp_gen.generate();
+    auto second_default_float = default_exp_gen.generate();
+
+    auto first_seeded_float = seeded_exp_gen.generate();
+    auto second_seeded_float = same_seeded_exp_gen.generate();
+    
+    ASSERT(first_default_float != second_default_float,
+           "sequantial generations shouldn't be equal");
+
+    ASSERT(first_seeded_float == second_seeded_float,
+           "Same seed = same number");
 }
 
 
