@@ -9,10 +9,10 @@ namespace customer {
 class Customer {
 public:
     Customer(std::uint32_t id,
-             std::uint32_t arrival_time,
-             std::uint32_t service_time,
+             float arrival_time,
+             float service_time,
              bool serviced,
-             std::uint32_t departure_time)
+             float departure_time)
     : id_(id)
     , arrival_time_(arrival_time)
     , service_time_(service_time)
@@ -24,10 +24,10 @@ public:
     {
         char comma;
         std::uint32_t id;
-        std::uint32_t arrival_time;
-        std::uint32_t service_time;
+        float arrival_time;
+        float service_time;
         bool serviced;
-        std::uint32_t departure_time;
+        float departure_time;
 
         std::stringstream ss(str);
         ss >> id;
@@ -68,11 +68,11 @@ public:
     {
         return id_;
     }
-    std::uint32_t arrival_time() const
+    float arrival_time() const
     {
         return arrival_time_;
     }
-    std::uint32_t service_time() const
+    float service_time() const
     {
         return service_time_;
     }
@@ -80,7 +80,7 @@ public:
     {
         return serviced_;
     }
-    std::uint32_t departure_time() const
+    float departure_time() const
     {
         return departure_time_;
     }
@@ -89,16 +89,16 @@ public:
         serviced_ = serviced;
     }
 
-    void set_departure_time(std::uint32_t departure_time) {
+    void set_departure_time(float departure_time) {
         departure_time_ = departure_time;
     }
 
 private:
     std::uint32_t id_; // unique id for debug purposes
-    std::uint32_t arrival_time_; // time they enter system
-    std::uint32_t service_time_; // time their job will take
+    float arrival_time_; // time they enter system
+    float service_time_; // time their job will take
     bool serviced_; // was request fulfilled
-    std::uint32_t departure_time_;
+    float departure_time_;
 };
 
 inline bool operator==(const Customer & lhs, const Customer & rhs)
@@ -111,8 +111,8 @@ inline bool operator==(const Customer & lhs, const Customer & rhs)
 }
 
 inline std::shared_ptr<Customer> make_customer(std::uint32_t id,
-                                               std::uint32_t arrrival_time,
-                                               std::uint32_t service_time)
+                                               float arrrival_time,
+                                               float service_time)
 {
     return std::make_shared<Customer>(id, arrrival_time, service_time, false, 0);
 }

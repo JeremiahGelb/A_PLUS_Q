@@ -79,10 +79,10 @@ void test_simulation_timer()
 
     std::vector<std::uint32_t> call_order;
 
-    timer.register_job(timer.time() + 1, [&call_order] {call_order.push_back(1);});
-    timer.register_job(timer.time() + 3, [&call_order] {call_order.push_back(4);});
-    timer.register_job(timer.time() + 2, [&call_order] {call_order.push_back(2);});
-    timer.register_job(timer.time() + 2, [&call_order] {call_order.push_back(3);});
+    timer.register_job(timer.time() + 1.1, [&call_order] {call_order.push_back(1);});
+    timer.register_job(timer.time() + 3.0, [&call_order] {call_order.push_back(4);});
+    timer.register_job(timer.time() + 2.2, [&call_order] {call_order.push_back(2);});
+    timer.register_job(timer.time() + 2.2, [&call_order] {call_order.push_back(3);});
 
     ASSERT(call_order.empty());
 
@@ -109,8 +109,8 @@ void test_simulation_timer()
 void test_customer()
 {
     constexpr auto kFirstCustomerId = 1;
-    constexpr auto kFirstCustomerArrivalTime = 2;
-    constexpr auto kFirstCustomerServiceTime = 3;
+    constexpr auto kFirstCustomerArrivalTime = 2.0;
+    constexpr auto kFirstCustomerServiceTime = 3.0;
 
     constexpr auto kDefaultServiced = false;
     constexpr auto kDefaultDepartureTime = 0;
@@ -126,7 +126,7 @@ void test_customer()
     ASSERT(first_customer->departure_time() == kDefaultDepartureTime, "initial departure time matches");
 
     constexpr auto new_serviced = true;
-    constexpr auto new_departure_time = 10;
+    constexpr auto new_departure_time = 10.0;
 
     first_customer->set_serviced(new_serviced);
     first_customer->set_departure_time(new_departure_time);
