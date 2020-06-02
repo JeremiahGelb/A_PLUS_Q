@@ -10,6 +10,7 @@
 #include "customer.h"
 #include "prng.h"
 #include "incoming_customers.h"
+#include "queue.h"
 
 namespace {
     Color::Modifier red(Color::FG_RED);
@@ -35,7 +36,8 @@ void run_all_tests()
         std::make_pair("Simulation Timer", test_simulation_timer),
         std::make_pair("Customer", test_customer),
         std::make_pair("prng", test_prng),
-        std::make_pair("incoming customers", test_incoming_customers)
+        std::make_pair("incoming customers", test_incoming_customers),
+        std::make_pair("queue", test_queue)
     };
 
     auto failure_count = 0;
@@ -219,5 +221,78 @@ void test_incoming_customers()
 
 }
 
+void test_queue()
+{
+    constexpr auto kMaxSize = 10;
+    auto queue = Queue(kMaxSize);
+
+    ASSERT(queue.size() == 0, "queue empty at start");
+
+    auto insert = queue.accept_customer_callback();
+
+    std::vector<std::shared_ptr<Customer>> received_customers;
+
+    auto request = [&received_customers] (std::shared_ptr<Customer> customer) {
+        received_customers.push_back(customer);
+    };
+
+    // testing basic functionality
+    insert(make_customer(0, 1.1, 1.1));
+    ASSERT(queue.size() == 1, "queue now has one customer");
+
+    queue.request_one_customer(request);
+    ASSERT(queue.size() == 0, "queue empty again");
+    ASSERT(received_customers.size() == 1, "customer made it to vector");
+
+    queue.request_one_customer(request);
+    queue.request_one_customer(request);
+    insert(make_customer(1, 1.1, 1.1));
+    ASSERT(queue.size() == 0, "first pending request fulfilled");
+    insert(make_customer(2, 1.1, 1.1));
+    ASSERT(queue.size() == 0, "second pending request fulfilled");
+    ASSERT(received_customers.size() == 3, "got all those customers");
+
+
+    // testing customers are delivered FIFO
+    received_customers.clear();
+    ASSERT(received_customers.size() == 0, "clear");
+    insert(make_customer(0, 1.1, 1.1));
+    insert(make_customer(1, 1.1, 1.1));
+    insert(make_customer(2, 1.1, 1.1));
+    queue.request_one_customer(request);
+    queue.request_one_customer(request);
+    queue.request_one_customer(request);
+    std::uint32_t counter = 0;
+    for (const auto & customer : received_customers) {
+        ASSERT(customer->id() == counter, "customers are fifo");
+        ++counter;
+    }
+
+    // testing requests are handled FIFO
+    std::vector<int> call_order;
+    auto request_1 = [&call_order] (std::shared_ptr<Customer>) {
+        call_order.push_back(0);
+    };
+    auto request_2 = [&call_order] (std::shared_ptr<Customer>) {
+        call_order.push_back(1);
+    };
+    queue.request_one_customer(request_1);
+    queue.request_one_customer(request_2);
+    insert(make_customer(0, 1.1, 1.1));
+    insert(make_customer(1, 1.1, 1.1));
+    ASSERT(call_order.size() == 2, "both got handled");
+    ASSERT(call_order[0] == 0, "first handled first");
+    ASSERT(call_order[1] == 1, "second handled second");
+
+    // testing max size
+    ASSERT(queue.size() == 0, "queue empty before testing max");
+    for(auto i = 0; i < kMaxSize; i++) {
+        insert(make_customer(0, 1.1, 1.1));
+    }
+    ASSERT(queue.size() == kMaxSize, "queue is at max");
+    insert(make_customer(0, 1.1, 1.1));
+    ASSERT(queue.size() == kMaxSize, "queue didn't excede max");
+
+}
 
 } // testing
