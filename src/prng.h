@@ -12,9 +12,12 @@ protected:
 
 class ExponentialGenerator : public RandomNumberGenerator {
 public:
-    ExponentialGenerator(long seed = 0)
+    ExponentialGenerator(float lambda, long seed = 0)
     : RandomNumberGenerator(seed)
+    , one_over_lambda_(1/lambda)
     {}
 
     float generate() override;
+private:
+    float one_over_lambda_;
 };

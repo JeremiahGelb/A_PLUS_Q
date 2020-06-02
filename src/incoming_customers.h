@@ -14,10 +14,12 @@ namespace {
 template <class ArrivalTimeGenerator, class ServiceTimeGenerator>
 class IncomingCustomers {
 public:
-    IncomingCustomers(SimulationTimer & simulation_timer, long seed = 0)
+    IncomingCustomers(SimulationTimer & simulation_timer,
+                      const ArrivalTimeGenerator & arrival_time_generator,
+                      const ServiceTimeGenerator & service_time_generator)
     : simulation_timer_(simulation_timer)
-    , arrival_time_generator_(ArrivalTimeGenerator(seed))
-    , service_time_generator_(ServiceTimeGenerator(seed + kArbitrarySeedOffset))
+    , arrival_time_generator_(arrival_time_generator)
+    , service_time_generator_(service_time_generator)
     {}
 
     void register_for_customers(const std::function<void(std::shared_ptr<Customer>)> & callback)

@@ -34,5 +34,5 @@ while (dummy == 0.0);
 float ExponentialGenerator::generate()
 {
    // will modify seed
-   return expdev(&seed_);
+   return one_over_lambda_*expdev(&seed_);
 }

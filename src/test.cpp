@@ -153,10 +153,15 @@ void test_customer()
 
 void test_prng()
 {
-    long kSeed = 12345;
-    ExponentialGenerator default_exp_gen;
-    ExponentialGenerator seeded_exp_gen(kSeed);
-    ExponentialGenerator same_seeded_exp_gen(kSeed);
+    constexpr long kSeed = 12345;
+    constexpr float kLambda = 1;
+    constexpr long kArbitratyOffset = 1000;
+
+    ExponentialGenerator default_exp_gen(kLambda);
+    ExponentialGenerator seeded_exp_gen(kLambda, kSeed);
+    ExponentialGenerator same_seeded_exp_gen(kLambda, kSeed);
+
+    ExponentialGenerator bigger_lambda_exp_gen(10*kLambda, kSeed + kArbitratyOffset);
 
     auto first_default_float = default_exp_gen.generate();
     auto second_default_float = default_exp_gen.generate();
@@ -169,6 +174,15 @@ void test_prng()
 
     ASSERT(first_seeded_float == second_seeded_float,
            "Same seed = same number");
+
+    auto small_lambda_sum = 0;
+    auto big_lambda_sum = 0;
+    for (auto i = 0; i < 30 ; ++i) {
+        small_lambda_sum += seeded_exp_gen.generate();
+        big_lambda_sum += bigger_lambda_exp_gen.generate();
+    }
+
+    ASSERT(small_lambda_sum > big_lambda_sum, "large lambda produces small values");
 }
 
 void test_incoming_customers()
@@ -182,7 +196,9 @@ void test_incoming_customers()
     SimulationTimer timer;
 
     auto incoming_customers = IncomingCustomers<ExponentialGenerator,
-                                                ExponentialGenerator>(timer);
+                                                ExponentialGenerator>(timer,
+                                                                      ExponentialGenerator(1, 0),
+                                                                      ExponentialGenerator(1, 10));
 
     incoming_customers.register_for_customers(customer_callback);
     ASSERT(customer_list.size() == 0, "empty before start");
