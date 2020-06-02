@@ -28,5 +28,6 @@ void test_tests();
 void test_simulation_timer();
 void test_customer();
 void test_prng();
+void test_incoming_customers();
 
 } // testing

@@ -1,5 +1,5 @@
 #pragma once
 
 namespace debug {
-    auto DEBUG_ENABLED = true;
+    constexpr auto DEBUG_ENABLED = false;
 }

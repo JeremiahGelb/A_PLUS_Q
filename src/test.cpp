@@ -34,7 +34,8 @@ void run_all_tests()
         std::make_pair("Test", test_tests),
         std::make_pair("Simulation Timer", test_simulation_timer),
         std::make_pair("Customer", test_customer),
-        std::make_pair("prng", test_prng)
+        std::make_pair("prng", test_prng),
+        std::make_pair("incoming customers", test_incoming_customers)
     };
 
     auto failure_count = 0;
@@ -166,6 +167,56 @@ void test_prng()
 
     ASSERT(first_seeded_float == second_seeded_float,
            "Same seed = same number");
+}
+
+void test_incoming_customers()
+{
+    auto customer_list = std::vector<std::shared_ptr<customer::Customer>>();
+
+    auto customer_callback = [&customer_list] (std::shared_ptr<customer::Customer> customer) {
+        customer_list.push_back(customer);
+    };
+
+    SimulationTimer timer;
+
+    auto incoming_customers = IncomingCustomers<prng::ExponentialGenerator,
+                                                prng::ExponentialGenerator>(timer);
+
+    incoming_customers.register_for_customers(customer_callback);
+    ASSERT(customer_list.size() == 0, "empty before start");
+
+    incoming_customers.start();
+    ASSERT(customer_list.size() == 0, "empty before run");
+
+    timer.advance_time();
+    ASSERT(customer_list.size() == 1, "first customer added");
+
+    timer.advance_time();
+    ASSERT(customer_list.size() == 2, "second customer added");
+
+    // add some more customers
+    timer.advance_time();
+    timer.advance_time();
+    timer.advance_time();
+    timer.advance_time();
+    timer.advance_time();
+
+    float last_arrival_time = 0.0;
+    float last_service_time = 0.0;
+
+    for (std::uint32_t i = 0; i < customer_list.size(); i++) {
+        auto & customer = customer_list[i];
+        ASSERT(customer->id() == i, "ids are sequential");
+
+        auto arrival_time = customer->arrival_time();
+        ASSERT(arrival_time > last_arrival_time, "times are increasing");
+        last_arrival_time = arrival_time;
+
+        auto service_time = customer->service_time();
+        ASSERT(service_time != last_service_time, "service times are different");
+        last_service_time = service_time;
+    }
+
 }
 
 

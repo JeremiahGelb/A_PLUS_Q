@@ -3,6 +3,7 @@
 #include <vector>
 #include <functional>
 #include <map>
+#include  "debug.h"
 
 class SimulationTimer {
 public:
@@ -14,6 +15,9 @@ public:
 
     inline void register_job(float start_time, std::function<void()> callback)
     {
+        if (debug::DEBUG_ENABLED) {
+            std::cout << __func__ << " called with start time: " << start_time << std::endl;
+        }
         jobs_.insert({start_time, callback});
     }
 
