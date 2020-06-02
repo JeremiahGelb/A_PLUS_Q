@@ -97,7 +97,7 @@ void test_simulation_timer()
     ASSERT(call_order.size() == 4, "third call did last job");
 
     for (std::uint32_t i = 0; i < 4; ++i) {
-        ASSERT(call_order[i] = i+1, "Call order was correct");
+        ASSERT(call_order[i] == i+1, "Call order was correct");
     }
 
     try {
