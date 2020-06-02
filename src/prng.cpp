@@ -31,10 +31,8 @@ while (dummy == 0.0);
 }
 // ------------------- END CODE FROM LECTURE MATERIAL -----------
 
-namespace prng {
-   float ExponentialGenerator::generate()
-   {
-      // will modify seed
-      return expdev(&seed_);
-   }
+float ExponentialGenerator::generate()
+{
+   // will modify seed
+   return expdev(&seed_);
 }

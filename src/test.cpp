@@ -116,7 +116,7 @@ void test_customer()
     constexpr auto kDefaultServiced = false;
     constexpr auto kDefaultDepartureTime = 0;
 
-    auto first_customer = customer::make_customer(kFirstCustomerId,
+    auto first_customer = make_customer(kFirstCustomerId,
                                                   kFirstCustomerArrivalTime,
                                                   kFirstCustomerServiceTime);
 
@@ -139,7 +139,7 @@ void test_customer()
     const std::string kExpectedString = "1,2,3,1,10\n";
     ASSERT(first_customer_string == kExpectedString, "to string works as expected");
 
-    auto second_customer = customer::make_customer(kExpectedString);
+    auto second_customer = make_customer(kExpectedString);
     ASSERT(second_customer->id() == kFirstCustomerId, "second_customer id matches");
     ASSERT(second_customer->arrival_time() == kFirstCustomerArrivalTime, "second_customer arrival time matches");
     ASSERT(second_customer->service_time() == kFirstCustomerServiceTime, "second_customer service time matches");
@@ -152,9 +152,9 @@ void test_customer()
 void test_prng()
 {
     long kSeed = 12345;
-    prng::ExponentialGenerator default_exp_gen;
-    prng::ExponentialGenerator seeded_exp_gen(kSeed);
-    prng::ExponentialGenerator same_seeded_exp_gen(kSeed);
+    ExponentialGenerator default_exp_gen;
+    ExponentialGenerator seeded_exp_gen(kSeed);
+    ExponentialGenerator same_seeded_exp_gen(kSeed);
 
     auto first_default_float = default_exp_gen.generate();
     auto second_default_float = default_exp_gen.generate();
@@ -171,16 +171,16 @@ void test_prng()
 
 void test_incoming_customers()
 {
-    auto customer_list = std::vector<std::shared_ptr<customer::Customer>>();
+    auto customer_list = std::vector<std::shared_ptr<Customer>>();
 
-    auto customer_callback = [&customer_list] (std::shared_ptr<customer::Customer> customer) {
+    auto customer_callback = [&customer_list] (std::shared_ptr<Customer> customer) {
         customer_list.push_back(customer);
     };
 
     SimulationTimer timer;
 
-    auto incoming_customers = IncomingCustomers<prng::ExponentialGenerator,
-                                                prng::ExponentialGenerator>(timer);
+    auto incoming_customers = IncomingCustomers<ExponentialGenerator,
+                                                ExponentialGenerator>(timer);
 
     incoming_customers.register_for_customers(customer_callback);
     ASSERT(customer_list.size() == 0, "empty before start");

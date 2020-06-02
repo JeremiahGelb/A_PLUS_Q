@@ -4,8 +4,6 @@
 #include <string>
 #include <sstream>
 
-namespace customer {
-
 class Customer {
 public:
     Customer(std::uint32_t id,
@@ -121,5 +119,3 @@ inline std::shared_ptr<Customer> make_customer(std::string str)
 {
     return std::make_shared<Customer>(str);
 }
-
-} // customer

@@ -1,7 +1,5 @@
 #pragma once
 
-namespace prng {
-
 class RandomNumberGenerator {
 public:
     RandomNumberGenerator(long seed = 0)
@@ -20,5 +18,3 @@ public:
 
     float generate() override;
 };
-
-} // namespace prng

@@ -20,7 +20,7 @@ public:
     , service_time_generator_(ServiceTimeGenerator(seed + kArbitrarySeedOffset))
     {}
 
-    void register_for_customers(const std::function<void(std::shared_ptr<customer::Customer>)> & callback)
+    void register_for_customers(const std::function<void(std::shared_ptr<Customer>)> & callback)
     {
         customer_destinations_.push_back(callback);
     }
@@ -40,7 +40,7 @@ private:
         }
         auto arrival_time = last_arrival_time_ + arrival_time_generator_.generate();
         auto service_time = service_time_generator_.generate();
-        auto customer = customer::make_customer(id_, arrival_time, service_time);
+        auto customer = make_customer(id_, arrival_time, service_time);
 
         last_arrival_time_ = arrival_time;
         ++id_;
@@ -57,7 +57,7 @@ private:
         );
     }
 
-    std::vector<std::function<void(std::shared_ptr<customer::Customer>)>> customer_destinations_;
+    std::vector<std::function<void(std::shared_ptr<Customer>)>> customer_destinations_;
     SimulationTimer & simulation_timer_;
     ArrivalTimeGenerator arrival_time_generator_;
     ServiceTimeGenerator service_time_generator_;
