@@ -14,7 +14,7 @@ namespace {
 template <class ArrivalTimeGenerator, class ServiceTimeGenerator>
 class IncomingCustomers {
 public:
-    IncomingCustomers(SimulationTimer & simulation_timer,
+    IncomingCustomers(const SimulationTimer & simulation_timer,
                       const ArrivalTimeGenerator & arrival_time_generator,
                       const ServiceTimeGenerator & service_time_generator)
     : simulation_timer_(simulation_timer)
@@ -60,7 +60,7 @@ private:
     }
 
     std::vector<CustomerRequest> customer_destinations_;
-    SimulationTimer & simulation_timer_;
+    const SimulationTimer & simulation_timer_;
     ArrivalTimeGenerator arrival_time_generator_;
     ServiceTimeGenerator service_time_generator_;
     std::uint32_t id_ = 0;
