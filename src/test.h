@@ -30,5 +30,6 @@ void test_customer();
 void test_prng();
 void test_incoming_customers();
 void test_queue();
+void test_server();
 
 } // testing

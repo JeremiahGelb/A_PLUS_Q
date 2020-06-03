@@ -11,10 +11,12 @@
 #include "prng.h"
 #include "incoming_customers.h"
 #include "queue.h"
+#include "server.h"
 
 namespace {
     Color::Modifier red(Color::FG_RED);
     Color::Modifier green(Color::FG_GREEN);
+    Color::Modifier blue(Color::FG_BLUE);
     Color::Modifier def(Color::FG_DEFAULT);
 } // anonymous
 
@@ -37,14 +39,15 @@ void run_all_tests()
         std::make_pair("Customer", test_customer),
         std::make_pair("prng", test_prng),
         std::make_pair("incoming customers", test_incoming_customers),
-        std::make_pair("queue", test_queue)
+        std::make_pair("queue", test_queue),
+        std::make_pair("Server", test_server)
     };
 
     auto failure_count = 0;
     auto unhandled_exception_count = 0;
     for (const auto & test : tests) {
         try {
-            std::cout << std::endl <<  "Starting test: " << test.first << std::endl;
+            std::cout << std::endl << blue <<  "Starting test: " << def << test.first << std::endl;
             test.second();
             std::cout << green << "Passed test: " << def << test.first << std::endl;
         } catch (TestFailure & e) {
@@ -310,7 +313,30 @@ void test_queue()
     ASSERT(queue.size() == kMaxSize, "queue is at max");
     insert(make_customer(0, 1.1, 1.1));
     ASSERT(queue.size() == kMaxSize, "queue didn't excede max");
+}
 
+void test_server()
+{
+    SimulationTimer timer;
+
+    constexpr auto kId = 0;
+    constexpr auto kArrivalTime = 1;
+    constexpr auto kServiceTime = 2;
+
+    auto call_count = 0;
+    CustomerRequestHandler customer_request_handler = [&call_count] (const CustomerRequest & request) {
+        request(make_customer(kId, kArrivalTime, kServiceTime));
+        ++call_count;
+    };
+
+    Server server(timer, customer_request_handler);
+
+    ASSERT(call_count == 0, "uncalled");
+    server.start();
+    ASSERT(call_count == 1, "Called once");
+
+    timer.advance_time();
+    ASSERT(call_count == 2, "Called twice");
 }
 
 } // testing
