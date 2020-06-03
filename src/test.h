@@ -2,6 +2,18 @@
 
 #include <string>
 
+#include "debug.h"
+#include "colormod.h"
+
+namespace {
+
+Color::Modifier red(Color::FG_RED);
+Color::Modifier green(Color::FG_GREEN);
+Color::Modifier blue(Color::FG_BLUE);
+Color::Modifier yellow(Color::FG_YELLOW);
+Color::Modifier def(Color::FG_DEFAULT);
+
+} // anon
 namespace testing {
 
 struct TestFailure : public std::exception
@@ -19,7 +31,69 @@ struct TestFailure : public std::exception
 };
 
 
-void ASSERT(bool condition, const std::string & explanation = "");
+inline void ASSERT(bool condition, const std::string & explanation = "")
+{
+    if (!condition) {
+        throw(TestFailure(explanation));
+    }
+}
+
+template<class L, class R>
+inline void ASSERT_EQ(const L & lhs, const R & rhs, const std::string & explanation = "")
+{
+    if (debug::STRICT_TEST_TYPES) {
+        if (typeid(R) != typeid(L)) {
+            std::cout << yellow << "WARNING" << def
+                      << " comparing " << typeid(L).name()
+                      << " to " << typeid(R).name()
+                      << " in assertion " << explanation << std::endl;
+        }
+    }
+    ASSERT(lhs == rhs, explanation);
+}
+
+template<class L, class R>
+inline void ASSERT_NEQ(const L & lhs, const R & rhs, const std::string & explanation = "")
+{
+    if (debug::STRICT_TEST_TYPES) {
+        if (typeid(R) != typeid(L)) {
+            std::cout << yellow << "WARNING" << def
+                      << " comparing " << typeid(L).name()
+                      << " to " << typeid(R).name()
+                      << " in assertion " << explanation << std::endl;
+        }
+    }
+    ASSERT(lhs != rhs, explanation);
+}
+
+template<class L, class R>
+inline void ASSERT_LT(const L & lhs, const R & rhs, const std::string & explanation = "")
+{
+    if (debug::STRICT_TEST_TYPES) {
+        if (typeid(R) != typeid(L)) {
+            std::cout << yellow << "WARNING" << def
+                      << " comparing " << typeid(L).name()
+                      << " to " << typeid(R).name()
+                      << " in assertion " << explanation << std::endl;
+        }
+    }
+    ASSERT(lhs < rhs, explanation);
+}
+
+template<class L, class R>
+inline void ASSERT_GT(const L & lhs, const R & rhs, const std::string & explanation = "")
+{
+    if (debug::STRICT_TEST_TYPES) {
+        if (typeid(R) != typeid(L)) {
+            std::cout << yellow << "WARNING" << def
+                      << " comparing " << typeid(L).name()
+                      << " to " << typeid(R).name()
+                      << " in assertion " << explanation << std::endl;
+        }
+    }
+    ASSERT(lhs > rhs, explanation);
+}
+
 
 void run_all_tests();
 
