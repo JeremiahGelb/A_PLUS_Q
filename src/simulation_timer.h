@@ -3,6 +3,8 @@
 #include <vector>
 #include <functional>
 #include <map>
+#include <iostream>
+
 #include  "debug.h"
 
 class SimulationTimer {
