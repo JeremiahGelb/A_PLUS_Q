@@ -244,7 +244,9 @@ void test_queue()
 
     ASSERT(queue.size() == 0, "queue empty at start");
 
-    auto insert = queue.accept_customer_callback();
+    CustomerRequest insert = [&queue] (std::shared_ptr<Customer> customer) {
+        queue.accept_customer(customer);
+    };           
 
     std::vector<std::shared_ptr<Customer>> received_customers;
 

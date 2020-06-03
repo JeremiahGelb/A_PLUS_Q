@@ -3,18 +3,15 @@
 #include "queue.h"
 #include "debug.h"
 
-std::function<void(std::shared_ptr<Customer>)>
-Queue::accept_customer_callback()
+void Queue::accept_customer(std::shared_ptr<Customer> customer)
 {
-    return [this] (std::shared_ptr<Customer> customer) {
-        if (size() >= max_size_) {
-            on_customer_rejected(customer);
-        } else {
-            customers_.push(customer);
-        }
+    if (size() >= max_size_) {
+        on_customer_rejected(customer);
+    } else {
+        customers_.push(customer);
+    }
 
-        handle_requests();
-    };
+    handle_requests();
 }
 
 void Queue::on_customer_rejected(const std::shared_ptr<Customer> & customer) {
@@ -25,7 +22,7 @@ void Queue::on_customer_rejected(const std::shared_ptr<Customer> & customer) {
 }
 
 void
-Queue::request_one_customer(const std::function<void(std::shared_ptr<Customer>)> & request)
+Queue::request_one_customer(const CustomerRequest & request)
 {
     requests_.push(request);
     handle_requests();

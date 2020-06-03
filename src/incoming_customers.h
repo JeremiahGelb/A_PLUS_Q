@@ -22,7 +22,7 @@ public:
     , service_time_generator_(service_time_generator)
     {}
 
-    void register_for_customers(const std::function<void(std::shared_ptr<Customer>)> & callback)
+    void register_for_customers(const CustomerRequest & callback)
     {
         customer_destinations_.push_back(callback);
     }
@@ -59,7 +59,7 @@ private:
         );
     }
 
-    std::vector<std::function<void(std::shared_ptr<Customer>)>> customer_destinations_;
+    std::vector<CustomerRequest> customer_destinations_;
     SimulationTimer & simulation_timer_;
     ArrivalTimeGenerator arrival_time_generator_;
     ServiceTimeGenerator service_time_generator_;

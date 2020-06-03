@@ -18,11 +18,11 @@ public:
         return customers_.size();
     }
     
-    std::function<void(std::shared_ptr<Customer>)>
-    accept_customer_callback(); // a getter for the function to put customers in the queue
-
     void 
-    request_one_customer(const std::function<void(std::shared_ptr<Customer>)> & request);
+    accept_customer(std::shared_ptr<Customer> customer);
+
+    void
+    request_one_customer(const CustomerRequest & request);
 
 private:
     void on_customer_rejected(const std::shared_ptr<Customer> & customer);
