@@ -9,7 +9,7 @@
 class Server {
 public:
     Server(const SimulationTimer & simulation_timer,
-           CustomerRequestHandler customer_request_handler)
+           const CustomerRequestHandler & customer_request_handler)
     : simulation_timer_(simulation_timer)
     , customer_request_handler_(customer_request_handler)
     {}
