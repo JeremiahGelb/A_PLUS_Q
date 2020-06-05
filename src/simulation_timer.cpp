@@ -17,8 +17,9 @@ void SimulationTimer::advance_time()
     }
 
     if (debug::DEBUG_ENABLED) {
-        std::cout << __func__ << " called at time:" << time_ << std::endl;
-        std::cout << " with jobs:" << jobs_.size() << std::endl;
+        std::cout << std::endl << "SimulationTimer::" << __func__
+                  << " called at time:" << time_
+                  << " with jobs:" << jobs_.size() << std::endl;
     }
 
     auto jobs_iterator = jobs_.begin();
@@ -33,8 +34,9 @@ void SimulationTimer::advance_time()
    }
 
     if (debug::DEBUG_ENABLED) {
-        std::cout << __func__ << "advance time ended at time:" << time_ << std::endl;
-        std::cout << " with jobs:" << jobs_.size() << std::endl;
+        std::cout << "SimulationTimer::" << __func__
+                  << " ended at time:" << time_
+                  <<  " with jobs:" << jobs_.size() << std::endl;
     }
 
    jobs_.erase(soonest_time);

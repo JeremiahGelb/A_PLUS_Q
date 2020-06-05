@@ -57,8 +57,7 @@ public:
            << ','
            << serviced_
            << ','
-           << departure_time_
-           << '\n';
+           << departure_time_;
 
         return ss.str();
     }
@@ -113,7 +112,7 @@ inline std::shared_ptr<Customer> make_customer(std::uint32_t id,
                                                float arrrival_time,
                                                float service_time)
 {
-    return std::make_shared<Customer>(id, arrrival_time, service_time, false, 0);
+    return std::make_shared<Customer>(id, arrrival_time, service_time, false, 0.0);
 }
 
 inline std::shared_ptr<Customer> make_customer(std::string str)

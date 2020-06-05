@@ -8,11 +8,11 @@ void Server::start()
         std::cout << "Server Started" << std::endl;
     }
     customer_request_handler_([this](std::shared_ptr<Customer> customer){
-        on_customer_entered(customer);
+        on_customer_entered_server(customer);
     });
 }
 
-void Server::on_customer_entered(std::shared_ptr<Customer> customer)
+void Server::on_customer_entered_server(const std::shared_ptr<Customer> & customer)
 {
     auto departure_time = simulation_timer_.time() + customer->service_time();
 
@@ -30,15 +30,19 @@ void Server::on_customer_entered(std::shared_ptr<Customer> customer)
             on_customer_serviced(customer); // service this customer
             
             customer_request_handler_([this](std::shared_ptr<Customer> customer){
-                on_customer_entered(customer);
+                on_customer_entered_server(customer);
             });
         }
     ); 
 }
 
-void Server::on_customer_serviced(std::shared_ptr<Customer> customer) {
+void Server::on_customer_serviced(const std::shared_ptr<Customer> & customer) {
+    customer->set_serviced(true);
+    customer->set_departure_time(simulation_timer_.time());
+
     if (debug::DEBUG_ENABLED) {
-        std::cout << "TODODODO" << std::endl;
-        std::cout << "serviced customer " << customer->to_string() << std::endl;
+        std::cout << "serviced customer: " << customer->to_string() << std::endl;
     }
+
+    exit_customer_(customer);
 }

@@ -121,7 +121,7 @@ void test_customer()
     ASSERT_EQ(first_customer->departure_time(), kDefaultDepartureTime, "initial departure time matches");
 
     constexpr auto new_serviced = true;
-    constexpr float new_departure_time = 10.0;
+    constexpr float new_departure_time = 10.5;
 
     first_customer->set_serviced(new_serviced);
     first_customer->set_departure_time(new_departure_time);
@@ -130,7 +130,7 @@ void test_customer()
     ASSERT_EQ(first_customer->departure_time(), new_departure_time, "new departure time matches");
 
     auto first_customer_string = first_customer->to_string();
-    const std::string kExpectedString = "1,2,3,1,10\n";
+    const std::string kExpectedString = "1,2,3,1,10.5";
     ASSERT_EQ(first_customer_string, kExpectedString, "to string works as expected");
 
     auto second_customer = make_customer(kExpectedString);
@@ -232,7 +232,13 @@ void test_incoming_customers()
 void test_queue()
 {
     constexpr std::size_t kMaxSize = 10;
-    auto queue = Queue(kMaxSize);
+
+    std::vector<std::shared_ptr<Customer>> rejected_customers;
+    auto exit_customer = [&rejected_customers] (const std::shared_ptr<Customer> & customer) {
+        rejected_customers.push_back(customer);
+    };
+
+    auto queue = Queue(kMaxSize, exit_customer);
 
     ASSERT_EQ(queue.size(), std::size_t(0), "queue empty at start");
 
@@ -299,9 +305,12 @@ void test_queue()
     for(std::size_t i = 0; i < kMaxSize; i++) {
         insert(make_customer(0, 1.1, 1.1));
     }
+    
+    ASSERT_EQ(rejected_customers.size(), std::size_t(0), "no rejected customers");
     ASSERT_EQ(queue.size(), kMaxSize, "queue is at max");
     insert(make_customer(0, 1.1, 1.1));
     ASSERT_EQ(queue.size(), kMaxSize, "queue didn't excede max");
+    ASSERT_EQ(rejected_customers.size(), std::size_t(1), "one rejected customer");
 }
 
 void test_server()
@@ -318,14 +327,21 @@ void test_server()
         ++call_count;
     };
 
-    Server server(timer, customer_request_handler);
+    std::vector<std::shared_ptr<Customer>> serviced_customers;
+    auto exit_customer = [&serviced_customers] (const std::shared_ptr<Customer> & customer) {
+        serviced_customers.push_back(customer);
+    };
+    Server server(timer, customer_request_handler, exit_customer);
 
     ASSERT_EQ(call_count, 0, "uncalled");
+    ASSERT_EQ(serviced_customers.size(), size_t(0), "none serviced");
     server.start();
     ASSERT_EQ(call_count, 1, "Called once");
+    ASSERT_EQ(serviced_customers.size(), size_t(0), "none serviced (one in service)");
 
     timer.advance_time();
     ASSERT_EQ(call_count, 2, "Called twice");
+    ASSERT_EQ(serviced_customers.size(), size_t(1), "one serviced)");
 }
 
 } // testing

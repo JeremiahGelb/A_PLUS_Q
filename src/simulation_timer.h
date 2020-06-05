@@ -18,7 +18,9 @@ public:
     inline void register_job(float start_time, std::function<void()> callback) const
     {
         if (debug::DEBUG_ENABLED) {
-            std::cout << __func__ << " called with start time: " << start_time << std::endl;
+            std::cout << "SimulationTimer::" << __func__ 
+                      << " registered job with start time: " << start_time
+                      << " at time: " << time_ << std::endl;
         }
         jobs_.insert({start_time, callback});
     }

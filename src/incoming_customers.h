@@ -35,11 +35,6 @@ public:
 private:
     void generate_customer()
     {
-        float current_time = simulation_timer_.time();
-
-        if (debug::DEBUG_ENABLED) {
-            std::cout << __func__ <<  " called at time: " << current_time << std::endl;
-        }
         auto arrival_time = last_arrival_time_ + arrival_time_generator_.generate();
         auto service_time = service_time_generator_.generate();
         auto customer = make_customer(id_, arrival_time, service_time);
@@ -47,9 +42,23 @@ private:
         last_arrival_time_ = arrival_time;
         ++id_;
 
+        if (debug::DEBUG_ENABLED) {
+            std::cout << "IncomingCustomers::" << __func__ 
+                      << " called at time: " << simulation_timer_.time()
+                      <<  " scheduling delivery of: " << customer->to_string()
+                      << " for time: " << arrival_time << std::endl;
+        }
+
         simulation_timer_.register_job(
             arrival_time,
             [this, customer] {
+
+                if (debug::DEBUG_ENABLED) {
+                    std::cout << "IncomingCustomers::" << __func__ 
+                              <<  " delivering customer: " << customer->to_string()
+                              << " at time: " << simulation_timer_.time() << std::endl;
+                }
+
                 for (const auto & callback : customer_destinations_) {
                     callback(customer);
                 }
