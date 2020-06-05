@@ -27,5 +27,5 @@ public:
 
 private:
     float time_;
-    mutable std::multimap<uint32_t, std::function<void()>> jobs_;
+    mutable std::multimap<float, std::function<void()>> jobs_;
 };
