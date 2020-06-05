@@ -19,7 +19,7 @@ public:
     }
     
     void 
-    accept_customer(std::shared_ptr<Customer> customer);
+    accept_customer(const std::shared_ptr<Customer> & customer);
 
     void
     request_one_customer(const CustomerRequest & request);

@@ -121,5 +121,5 @@ inline std::shared_ptr<Customer> make_customer(std::string str)
     return std::make_shared<Customer>(str);
 }
 
-using CustomerRequest = std::function<void(std::shared_ptr<Customer>)>;
+using CustomerRequest = std::function<void(const std::shared_ptr<Customer> &)>;
 using CustomerRequestHandler = std::function<void(const CustomerRequest &)>;

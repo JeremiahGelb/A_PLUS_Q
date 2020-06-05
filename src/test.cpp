@@ -181,7 +181,7 @@ void test_incoming_customers()
 {
     auto customer_list = std::vector<std::shared_ptr<Customer>>();
 
-    auto customer_callback = [&customer_list] (std::shared_ptr<Customer> customer) {
+    auto customer_callback = [&customer_list] (const std::shared_ptr<Customer> & customer) {
         customer_list.push_back(customer);
     };
 
@@ -236,13 +236,13 @@ void test_queue()
 
     ASSERT_EQ(queue.size(), std::size_t(0), "queue empty at start");
 
-    CustomerRequest insert = [&queue] (std::shared_ptr<Customer> customer) {
+    CustomerRequest insert = [&queue] (const std::shared_ptr<Customer> & customer) {
         queue.accept_customer(customer);
     };           
 
     std::vector<std::shared_ptr<Customer>> received_customers;
 
-    auto request = [&received_customers] (std::shared_ptr<Customer> customer) {
+    auto request = [&received_customers] (const std::shared_ptr<Customer> & customer) {
         received_customers.push_back(customer);
     };
 
@@ -280,10 +280,10 @@ void test_queue()
 
     // testing requests are handled FIFO
     std::vector<int> call_order;
-    auto request_1 = [&call_order] (std::shared_ptr<Customer>) {
+    auto request_1 = [&call_order] (const std::shared_ptr<Customer> &) {
         call_order.push_back(0);
     };
-    auto request_2 = [&call_order] (std::shared_ptr<Customer>) {
+    auto request_2 = [&call_order] (const std::shared_ptr<Customer> &) {
         call_order.push_back(1);
     };
     queue.request_one_customer(request_1);
