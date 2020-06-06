@@ -3,7 +3,7 @@
 #include "simulation_timer.h"
 #include "prng.h"
 #include "customer.h"
-#include "debug.h"
+#include "constants.h"
 
 namespace {
 
@@ -42,7 +42,7 @@ private:
         last_arrival_time_ = arrival_time;
         ++id_;
 
-        if (debug::DEBUG_ENABLED) {
+        if (constants::DEBUG_ENABLED) {
             std::cout << "IncomingCustomers::" << __func__ 
                       << " called at time: " << simulation_timer_.time()
                       <<  " scheduling delivery of: " << customer->to_string()
@@ -53,7 +53,7 @@ private:
             arrival_time,
             [this, customer] {
 
-                if (debug::DEBUG_ENABLED) {
+                if (constants::DEBUG_ENABLED) {
                     std::cout << "IncomingCustomers::" << __func__ 
                               <<  " delivering customer: " << customer->to_string()
                               << " at time: " << simulation_timer_.time() << std::endl;

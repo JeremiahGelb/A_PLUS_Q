@@ -1,11 +1,11 @@
 #include <iostream>
 
 #include "simulation_spy.h"
-#include "debug.h"
+#include "constants.h"
 
 void SimulationSpy::on_customer_entering(const std::shared_ptr<Customer> & customer)
 {
-    if (debug::DEBUG_ENABLED) {
+    if (constants::DEBUG_ENABLED) {
         std::cout << "SimulationSpy::" << __func__ 
                   << " got " << customer->to_string() 
                   << " old size:" << system_customers_.size() << std::endl;
@@ -13,7 +13,7 @@ void SimulationSpy::on_customer_entering(const std::shared_ptr<Customer> & custo
     ++entered_customers_;
     system_customers_.insert({customer->id(), customer});
 
-    if (debug::DEBUG_ENABLED) {
+    if (constants::DEBUG_ENABLED) {
         std::cout << "SimulationSpy::" << __func__ 
                   << " exited with new size:" << system_customers_.size() << std::endl;
     }
@@ -22,7 +22,7 @@ void SimulationSpy::on_customer_entering(const std::shared_ptr<Customer> & custo
 
 void SimulationSpy::on_customer_exiting(const std::shared_ptr<Customer> & customer)
 {
-    if (debug::DEBUG_ENABLED) {
+    if (constants::DEBUG_ENABLED) {
         std::cout << "SimulationSpy::" << __func__ 
                   << " erasing " << customer->to_string()
                   << " old size: " << system_customers_.size() << std::endl;
@@ -44,7 +44,7 @@ void SimulationSpy::on_customer_exiting(const std::shared_ptr<Customer> & custom
     }
 
     save_default_stats(customer);
-    if (debug::DEBUG_ENABLED) {
+    if (constants::DEBUG_ENABLED) {
         std::cout << "SimulationSpy::" << __func__ 
                   << " exited with new size:" << system_customers_.size() << std::endl;
     }

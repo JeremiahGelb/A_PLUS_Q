@@ -5,7 +5,7 @@
 SimulationTimer::SimulationTimer()
 : time_(0)
 {
-    if (debug::DEBUG_ENABLED) {
+    if (constants::DEBUG_ENABLED) {
             std::cout << "Simulation Timer Created" << std::endl;
     }
 }
@@ -16,7 +16,7 @@ void SimulationTimer::advance_time()
        throw(std::runtime_error("jobs empty in advance time"));
     }
 
-    if (debug::DEBUG_ENABLED) {
+    if (constants::DEBUG_ENABLED) {
         std::cout << std::endl << "SimulationTimer::" << __func__
                   << " called at time:" << time_
                   << " with jobs:" << jobs_.size() << std::endl;
@@ -33,7 +33,7 @@ void SimulationTimer::advance_time()
         }
    }
 
-    if (debug::DEBUG_ENABLED) {
+    if (constants::DEBUG_ENABLED) {
         std::cout << "SimulationTimer::" << __func__
                   << " ended at time:" << time_
                   <<  " with jobs:" << jobs_.size() << std::endl;

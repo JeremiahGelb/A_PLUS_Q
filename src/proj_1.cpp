@@ -14,7 +14,7 @@ void run_project_1(const float lambda,
                    const std::size_t customers_to_serve,
                    const std::size_t L)
 {
-    if (debug::DEBUG_ENABLED) {
+    if (constants::DEBUG_ENABLED) {
         std::cout << __func__
                   << " lambda: " << lambda
                   << ", max queue customers: " << max_queue_customers
@@ -24,8 +24,8 @@ void run_project_1(const float lambda,
     }
     // set up simulation
     constexpr float kMu = 1.0;
-    constexpr long kServiceSeed = 1234;
-    constexpr long kArrivalSeed = 4321;
+    constexpr long kServiceSeed = 1234 + constants::SEED_OFFSET;
+    constexpr long kArrivalSeed = 4321 + constants::SEED_OFFSET;
 
     SimulationTimer timer;
 
@@ -68,7 +68,7 @@ void run_project_1(const float lambda,
         timer.advance_time();
     }
 
-    if (debug::PRINT_STATS) {
+    if (constants::PRINT_STATS) {
         std::cout << "Lambda: " << lambda << std::endl;
         std::cout << "K: " << max_queue_customers << std::endl;
         std::cout << "C: " << customers_to_serve << std::endl;

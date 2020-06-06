@@ -5,7 +5,7 @@
 #include <map>
 #include <iostream>
 
-#include  "debug.h"
+#include  "constants.h"
 
 class SimulationTimer {
 public:
@@ -17,7 +17,7 @@ public:
 
     inline void register_job(float start_time, std::function<void()> callback) const
     {
-        if (debug::DEBUG_ENABLED) {
+        if (constants::DEBUG_ENABLED) {
             std::cout << "SimulationTimer::" << __func__ 
                       << " registered job with start time: " << start_time
                       << " at time: " << time_ << std::endl;

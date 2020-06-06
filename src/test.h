@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "debug.h"
+#include "constants.h"
 #include "colormod.h"
 
 namespace {
@@ -41,7 +41,7 @@ inline void ASSERT(bool condition, const std::string & explanation = "")
 template<class L, class R>
 inline void ASSERT_EQ(const L & lhs, const R & rhs, const std::string & explanation = "")
 {
-    if (debug::STRICT_TEST_TYPES) {
+    if (constants::STRICT_TEST_TYPES) {
         if (typeid(R) != typeid(L)) {
             std::cout << yellow << "WARNING" << def
                       << " comparing " << typeid(L).name()
@@ -55,7 +55,7 @@ inline void ASSERT_EQ(const L & lhs, const R & rhs, const std::string & explanat
 template<class L, class R>
 inline void ASSERT_NEQ(const L & lhs, const R & rhs, const std::string & explanation = "")
 {
-    if (debug::STRICT_TEST_TYPES) {
+    if (constants::STRICT_TEST_TYPES) {
         if (typeid(R) != typeid(L)) {
             std::cout << yellow << "WARNING" << def
                       << " comparing " << typeid(L).name()
@@ -69,7 +69,7 @@ inline void ASSERT_NEQ(const L & lhs, const R & rhs, const std::string & explana
 template<class L, class R>
 inline void ASSERT_LT(const L & lhs, const R & rhs, const std::string & explanation = "")
 {
-    if (debug::STRICT_TEST_TYPES) {
+    if (constants::STRICT_TEST_TYPES) {
         if (typeid(R) != typeid(L)) {
             std::cout << yellow << "WARNING" << def
                       << " comparing " << typeid(L).name()
@@ -83,7 +83,7 @@ inline void ASSERT_LT(const L & lhs, const R & rhs, const std::string & explanat
 template<class L, class R>
 inline void ASSERT_GT(const L & lhs, const R & rhs, const std::string & explanation = "")
 {
-    if (debug::STRICT_TEST_TYPES) {
+    if (constants::STRICT_TEST_TYPES) {
         if (typeid(R) != typeid(L)) {
             std::cout << yellow << "WARNING" << def
                       << " comparing " << typeid(L).name()
