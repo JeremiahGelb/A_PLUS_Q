@@ -13,7 +13,28 @@ void Queue::accept_customer(const std::shared_ptr<Customer> & customer)
                       << " adding customer: " << customer->to_string()
                       << std::endl;
         }
-        customers_.push_back(customer);
+        switch(discipline_) {
+        case queueing::Discipline::FCFS:
+            customers_.push_back(customer);
+            break;
+        case queueing::Discipline::LCFS_NP:
+            customers_.push_back(customer);
+            break;
+        case queueing::Discipline::SJF_NP:
+        {
+            auto pos = customers_.begin();
+            for (; pos != customers_.end(); ++pos) {
+                if (customer->service_time() > (*pos)->service_time()) {
+                    break;
+                }
+            }
+            customers_.insert(pos, customer);
+            break;
+        }
+        case queueing::Discipline::PRIO_NP:
+        case queueing::Discipline::PRIO_P:
+            throw std::runtime_error("TODO: unimplimented");
+        }
     }
 
     handle_requests();
@@ -44,19 +65,7 @@ void Queue::handle_requests()
 
     while ((!customers_.empty()) && (!requests_.empty())) {
         auto request = requests_.front();
-
-        std::vector<std::shared_ptr<Customer>>::iterator customer_iterator;
-        switch(discipline_) {
-        case queueing::Discipline::FCFS:
-            customer_iterator = customers_.begin();
-            break;
-        case queueing::Discipline::LCFS_NP:
-        case queueing::Discipline::SJF_NP:
-        case queueing::Discipline::PRIO_NP:
-        case queueing::Discipline::PRIO_P:
-            throw std::runtime_error("TODO: unimplimented");
-        }
-
+        auto customer_iterator = get_customer_iterator();
 
         if (constants::DEBUG_ENABLED) {
             std::cout << "Queue::" << __func__ 
@@ -76,3 +85,18 @@ void Queue::handle_requests()
     }
 }
 
+std::vector<std::shared_ptr<Customer>>::iterator Queue::get_customer_iterator()
+{
+    switch(discipline_) {
+    case queueing::Discipline::FCFS:
+        return customers_.begin();
+    case queueing::Discipline::LCFS_NP:
+        return customers_.end() - 1;
+    case queueing::Discipline::SJF_NP:
+        // sjf are inserted sorted
+        return customers_.end() - 1;
+    case queueing::Discipline::PRIO_NP:
+    case queueing::Discipline::PRIO_P:
+        throw std::runtime_error("TODO: unimplimented");
+    }
+}

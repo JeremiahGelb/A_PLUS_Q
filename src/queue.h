@@ -40,6 +40,7 @@ public:
 
 private:
     void on_customer_rejected(const std::shared_ptr<Customer> & customer);
+    std::vector<std::shared_ptr<Customer>>::iterator get_customer_iterator();
 
     void handle_requests();
     std::size_t max_size_;

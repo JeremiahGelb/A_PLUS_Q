@@ -103,7 +103,9 @@ void test_simulation_timer();
 void test_customer();
 void test_prng();
 void test_incoming_customers();
-void test_queue();
+void test_fcfs_queue();
+void test_lcfs_queue();
+void test_sjf_queue();
 void test_server();
 
 } // testing

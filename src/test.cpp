@@ -24,7 +24,9 @@ void run_all_tests()
         std::make_pair("Customer", test_customer),
         std::make_pair("prng", test_prng),
         std::make_pair("incoming customers", test_incoming_customers),
-        std::make_pair("queue", test_queue),
+        std::make_pair("fcfs queue", test_fcfs_queue),
+        std::make_pair("lcfs_queue", test_lcfs_queue),
+        std::make_pair("sjf_queue", test_sjf_queue),
         std::make_pair("Server", test_server)
     };
 
@@ -235,7 +237,7 @@ void test_incoming_customers()
 
 }
 
-void test_queue()
+void test_fcfs_queue()
 {
     constexpr std::size_t kMaxSize = 10;
 
@@ -287,6 +289,176 @@ void test_queue()
     std::uint32_t counter = 0;
     for (const auto & customer : received_customers) {
         ASSERT_EQ(customer->id(), counter, "customers are fifo");
+        ++counter;
+    }
+
+    // testing requests are handled FIFO
+    std::vector<int> call_order;
+    auto request_1 = [&call_order] (const std::shared_ptr<Customer> &) {
+        call_order.push_back(0);
+    };
+    auto request_2 = [&call_order] (const std::shared_ptr<Customer> &) {
+        call_order.push_back(1);
+    };
+    queue.request_one_customer(request_1);
+    queue.request_one_customer(request_2);
+    insert(make_customer(0, 1.1, 1.1));
+    insert(make_customer(1, 1.1, 1.1));
+    ASSERT_EQ(call_order.size(), std::size_t(2), "both got handled");
+    ASSERT_EQ(call_order[0], 0, "first handled first");
+    ASSERT_EQ(call_order[1], 1, "second handled second");
+
+    // testing max size
+    ASSERT_EQ(queue.size(), std::size_t(0), "queue empty before testing max");
+    for(std::size_t i = 0; i < kMaxSize; i++) {
+        insert(make_customer(0, 1.1, 1.1));
+    }
+    
+    ASSERT_EQ(rejected_customers.size(), std::size_t(0), "no rejected customers");
+    ASSERT_EQ(queue.size(), kMaxSize, "queue is at max");
+    insert(make_customer(0, 1.1, 1.1));
+    ASSERT_EQ(queue.size(), kMaxSize, "queue didn't excede max");
+    ASSERT_EQ(rejected_customers.size(), std::size_t(1), "one rejected customer");
+}
+
+void test_lcfs_queue()
+{
+    // Made the choice to just copy paste rather than making a base test
+    constexpr std::size_t kMaxSize = 10;
+
+    std::vector<std::shared_ptr<Customer>> rejected_customers;
+    auto exit_customer = [&rejected_customers] (const std::shared_ptr<Customer> & customer) {
+        rejected_customers.push_back(customer);
+    };
+
+    auto queue = Queue(kMaxSize, exit_customer, queueing::Discipline::LCFS_NP);
+
+    ASSERT_EQ(queue.size(), std::size_t(0), "queue empty at start");
+
+    CustomerRequest insert = [&queue] (const std::shared_ptr<Customer> & customer) {
+        queue.accept_customer(customer);
+    };           
+
+    std::vector<std::shared_ptr<Customer>> received_customers;
+
+    auto request = [&received_customers] (const std::shared_ptr<Customer> & customer) {
+        received_customers.push_back(customer);
+    };
+
+    // testing basic functionality
+    insert(make_customer(0, 1.1, 1.1));
+    ASSERT_EQ(queue.size(), std::size_t(1), "queue now has one customer");
+
+    queue.request_one_customer(request);
+    ASSERT_EQ(queue.size(), std::size_t(0), "queue empty again");
+    ASSERT_EQ(received_customers.size(), std::size_t(1), "customer made it to vector");
+
+    queue.request_one_customer(request);
+    queue.request_one_customer(request);
+    insert(make_customer(1, 1.1, 1.1));
+    ASSERT_EQ(queue.size(), std::size_t(0), "first pending request fulfilled");
+    insert(make_customer(2, 1.1, 1.1));
+    ASSERT_EQ(queue.size(), std::size_t(0), "second pending request fulfilled");
+    ASSERT_EQ(received_customers.size(), std::size_t(3), "got all those customers");
+
+
+    // testing customers are delivered FIFO
+    received_customers.clear();
+    ASSERT(received_customers.size() == 0, "clear");
+    insert(make_customer(2, 1.1, 1.1));
+    insert(make_customer(1, 1.1, 1.1));
+    insert(make_customer(0, 1.1, 1.1));
+    queue.request_one_customer(request);
+    queue.request_one_customer(request);
+    queue.request_one_customer(request);
+    std::uint32_t counter = 0;
+    for (const auto & customer : received_customers) {
+        ASSERT_EQ(customer->id(), counter, "customers are lifo");
+        ++counter;
+    }
+
+    // testing requests are handled FIFO
+    std::vector<int> call_order;
+    auto request_1 = [&call_order] (const std::shared_ptr<Customer> &) {
+        call_order.push_back(0);
+    };
+    auto request_2 = [&call_order] (const std::shared_ptr<Customer> &) {
+        call_order.push_back(1);
+    };
+    queue.request_one_customer(request_1);
+    queue.request_one_customer(request_2);
+    insert(make_customer(0, 1.1, 1.1));
+    insert(make_customer(1, 1.1, 1.1));
+    ASSERT_EQ(call_order.size(), std::size_t(2), "both got handled");
+    ASSERT_EQ(call_order[0], 0, "first handled first");
+    ASSERT_EQ(call_order[1], 1, "second handled second");
+
+    // testing max size
+    ASSERT_EQ(queue.size(), std::size_t(0), "queue empty before testing max");
+    for(std::size_t i = 0; i < kMaxSize; i++) {
+        insert(make_customer(0, 1.1, 1.1));
+    }
+    
+    ASSERT_EQ(rejected_customers.size(), std::size_t(0), "no rejected customers");
+    ASSERT_EQ(queue.size(), kMaxSize, "queue is at max");
+    insert(make_customer(0, 1.1, 1.1));
+    ASSERT_EQ(queue.size(), kMaxSize, "queue didn't excede max");
+    ASSERT_EQ(rejected_customers.size(), std::size_t(1), "one rejected customer");
+}
+
+void test_sjf_queue()
+{
+    // Made the choice to just copy paste rather than making a base test
+    constexpr std::size_t kMaxSize = 10;
+
+    std::vector<std::shared_ptr<Customer>> rejected_customers;
+    auto exit_customer = [&rejected_customers] (const std::shared_ptr<Customer> & customer) {
+        rejected_customers.push_back(customer);
+    };
+
+    auto queue = Queue(kMaxSize, exit_customer, queueing::Discipline::SJF_NP);
+
+    ASSERT_EQ(queue.size(), std::size_t(0), "queue empty at start");
+
+    CustomerRequest insert = [&queue] (const std::shared_ptr<Customer> & customer) {
+        queue.accept_customer(customer);
+    };           
+
+    std::vector<std::shared_ptr<Customer>> received_customers;
+
+    auto request = [&received_customers] (const std::shared_ptr<Customer> & customer) {
+        received_customers.push_back(customer);
+    };
+
+    // testing basic functionality
+    insert(make_customer(0, 1.1, 1.1));
+    ASSERT_EQ(queue.size(), std::size_t(1), "queue now has one customer");
+
+    queue.request_one_customer(request);
+    ASSERT_EQ(queue.size(), std::size_t(0), "queue empty again");
+    ASSERT_EQ(received_customers.size(), std::size_t(1), "customer made it to vector");
+
+    queue.request_one_customer(request);
+    queue.request_one_customer(request);
+    insert(make_customer(1, 1.1, 1.1));
+    ASSERT_EQ(queue.size(), std::size_t(0), "first pending request fulfilled");
+    insert(make_customer(2, 1.1, 1.1));
+    ASSERT_EQ(queue.size(), std::size_t(0), "second pending request fulfilled");
+    ASSERT_EQ(received_customers.size(), std::size_t(3), "got all those customers");
+
+
+    // testing customers are delivered SJF
+    received_customers.clear();
+    ASSERT(received_customers.size() == 0, "clear");
+    insert(make_customer(2, 1.1, 2));
+    insert(make_customer(0, 1.1, 1));
+    insert(make_customer(1, 1.1, 1.5));
+    queue.request_one_customer(request);
+    queue.request_one_customer(request);
+    queue.request_one_customer(request);
+    std::uint32_t counter = 0;
+    for (const auto & customer : received_customers) {
+        ASSERT_EQ(customer->id(), counter, "customers are SJF");
         ++counter;
     }
 
