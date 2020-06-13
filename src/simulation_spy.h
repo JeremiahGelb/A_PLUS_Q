@@ -14,6 +14,13 @@ public:
                   std::uint32_t transient_period = 0)
     : L_(L)
     , transient_period_(transient_period)
+    , system_customers_()
+    , entered_customers_(0)
+    , serviced_customers_(0)
+    , lost_customers_(0)
+    , total_waiting_time_(0)
+    , total_service_time_(0)
+    , additional_stats_()
     {
         // because the most customers in the server is known and small
         // (for project 1 it will be 101 I think). I'd rather just reserve the memory
