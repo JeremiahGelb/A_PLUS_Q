@@ -87,7 +87,7 @@ void Queue::handle_requests()
 
 std::vector<std::shared_ptr<Customer>>::iterator Queue::get_customer_iterator()
 {
-    switch(discipline_) {
+    switch (discipline_) {
     case queueing::Discipline::FCFS:
         return customers_.begin();
     case queueing::Discipline::LCFS_NP:

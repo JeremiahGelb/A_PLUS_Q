@@ -44,10 +44,29 @@ void SimulationSpy::on_customer_exiting(const std::shared_ptr<Customer> & custom
     }
 
     save_default_stats(customer);
+
+    if (id == transient_period_ - 1) {
+        on_transient_period_elapsed();
+    }
+
     if (constants::DEBUG_ENABLED) {
         std::cout << "SimulationSpy::" << __func__ 
                   << " exited with new size:" << system_customers_.size() << std::endl;
     }
+}
+
+void SimulationSpy::on_transient_period_elapsed()
+{
+    if (constants::DEBUG_ENABLED) {
+        std::cout << "SimulationSpy::" << __func__ 
+                  << " erasing stats!" << std::endl;
+    }
+
+    entered_customers_ = 0;
+    serviced_customers_ = 0;
+    lost_customers_ = 0;
+    total_waiting_time_ = 0;
+    total_service_time_ = 0;
 }
 
 void SimulationSpy::save_default_stats(const std::shared_ptr<Customer> & customer)
