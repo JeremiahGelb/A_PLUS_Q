@@ -14,13 +14,13 @@ make
 make clean
 ```
 
-## RUN
+## RUN PROJECT 1
 ```
-./run.o Lambda K C L
+./run.o --proj1 Lambda K C L
 
 EG
 
-./run.o .5 20 100000 50000
+./run.o --proj1 .5 20 100000 50000
 
 Lambda = Parameter of exponentially distributed inter-arrival times 
          (higher = faster arrivals. Stable for 0 < Lambda < 1)
