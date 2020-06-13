@@ -74,15 +74,20 @@ void test_simulation_timer()
 
     std::vector<std::uint32_t> call_order;
 
-    timer.register_job(timer.time() + 1.1, [&call_order] {call_order.push_back(1);});
-    timer.register_job(timer.time() + 3.0, [&call_order] {call_order.push_back(4);});
-    timer.register_job(timer.time() + 2.2, [&call_order] {call_order.push_back(2);});
-    timer.register_job(timer.time() + 2.2, [&call_order] {call_order.push_back(3);});
+    timer.register_job(timer.time() + 1.1, [&call_order] { call_order.push_back(1); });
+    timer.register_job(timer.time() + 3.0, [&call_order] { call_order.push_back(4); });
+    timer.register_job(timer.time() + 2.2, [&call_order] { call_order.push_back(2); });
+    timer.register_job(timer.time() + 2.2, [&call_order] { call_order.push_back(3); });
+
+    auto remove_id = timer.register_job(timer.time() + 2.0,
+                                        [] { ASSERT(false, "this job should get removed"); });
 
     ASSERT(call_order.empty(), "empty at start");
 
     timer.advance_time();
     ASSERT_EQ(call_order.size(), std::size_t(1), "first call did first job");
+
+    timer.remove_job(remove_id);
 
     timer.advance_time();
     ASSERT_EQ(call_order.size(), std::size_t(3), "second call did two jobs");
@@ -96,6 +101,7 @@ void test_simulation_timer()
 
     try {
         timer.advance_time();
+        timer.remove_job(1000);
         ASSERT(false, "expected to throw runtime error");
     } catch(std::runtime_error &) {}
 
