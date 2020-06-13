@@ -13,7 +13,7 @@ void Queue::accept_customer(const std::shared_ptr<Customer> & customer)
                       << " adding customer: " << customer->to_string()
                       << std::endl;
         }
-        customers_.push(customer);
+        customers_.push_back(customer);
     }
 
     handle_requests();
@@ -43,19 +43,30 @@ void Queue::handle_requests()
     }
 
     while ((!customers_.empty()) && (!requests_.empty())) {
-        auto customer = customers_.front();
         auto request = requests_.front();
+
+        std::vector<std::shared_ptr<Customer>>::iterator customer_iterator;
+        switch(discipline_) {
+        case queueing::Discipline::FCFS:
+            customer_iterator = customers_.begin();
+            break;
+        case queueing::Discipline::LCFS_NP:
+        case queueing::Discipline::SJF_NP:
+        case queueing::Discipline::PRIO_NP:
+        case queueing::Discipline::PRIO_P:
+            throw std::runtime_error("TODO: unimplimented");
+        }
 
 
         if (constants::DEBUG_ENABLED) {
             std::cout << "Queue::" << __func__ 
-                      << " delivering_customer: " << customer->to_string() << std::endl;
+                      << " delivering_customer: " << (*customer_iterator)->to_string() << std::endl;
         }
 
-        request(customer);
+        request(*customer_iterator);
 
         requests_.pop();
-        customers_.pop();
+        customers_.erase(customer_iterator);
     }
 
     if (constants::DEBUG_ENABLED) {
