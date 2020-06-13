@@ -7,6 +7,7 @@
 
 #include "test.h"
 #include "proj_1.h"
+#include "proj_2.h"
 
 void print_help_text()
 {
@@ -51,6 +52,94 @@ void proj_1(const std::vector<std::string> & args)
               << duration.count() << " milliseconds!" << std::endl; 
 }
 
+void proj_2(const std::vector<std::string> & args)
+{
+    // pname, mode, lambda, kcpu, kio, C, L, M
+    constexpr auto kLambdaIndex = 2;
+    constexpr auto kCpuQueueSizeIndex = 3;
+    constexpr auto kIoQueueSizeIndex = 4;
+    constexpr auto kCustomersToServeIndex = 5;
+    constexpr auto kLIndex = 6;
+    constexpr auto kMIndex = 7;
+
+    float lambda = 0;
+    std::size_t cpu_queue_size = 0;
+    std::size_t io_queue_size = 0;
+    std::size_t customers_to_serve = 0;
+    std::size_t L = 100;
+    std::size_t M = 0;
+
+    std::stringstream(args[kLambdaIndex]) >> lambda;
+    std::stringstream(args[kCpuQueueSizeIndex]) >> cpu_queue_size;
+    std::stringstream(args[kIoQueueSizeIndex]) >> io_queue_size;
+    std::stringstream(args[kCustomersToServeIndex]) >> customers_to_serve;
+    std::stringstream(args[kLIndex]) >> L;
+    std::stringstream(args[kMIndex]) >> M;
+
+    if (lambda == 0
+        || cpu_queue_size == 0
+        || customers_to_serve == 0
+        || io_queue_size == 0
+        || L == 100
+        || M == 0) {
+        std::cout << "Error Parsing Args for proj2" << std::endl;
+        print_help_text();
+        return;
+    }
+
+    project2::Mode mode;
+    switch (L) {
+    case 0:
+        mode = project2::Mode::MM1;
+        break;
+    case 1:
+        mode = project2::Mode::CPU;
+        break;
+    default:
+        print_help_text();
+        return;
+    }
+
+    project2::Discipline discipline;
+    switch(M) {
+    case 1:
+        discipline = project2::Discipline::FCFS;
+        break;
+    case 2:
+        discipline = project2::Discipline::LCFS_NP;
+        break;
+    case 3:
+        discipline = project2::Discipline::SJF_NP;
+        break;
+    case 4:
+        discipline = project2::Discipline::PRIO_NP;
+        break;
+    case 5:
+        discipline = project2::Discipline::PRIO_P;
+        break;
+    default:
+        print_help_text();
+        return;
+    }
+
+    constexpr size_t kRuns = 30; // number of runs to generate stats from
+    auto start = std::chrono::high_resolution_clock::now();
+
+    project2::run_project_2(lambda,
+                            cpu_queue_size,
+                            io_queue_size,
+                            customers_to_serve,
+                            mode,
+                            discipline,
+                            kRuns);
+
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+    std::cout << kRuns << " runs of "
+              << customers_to_serve  << " customers took "
+              << duration.count() << " milliseconds!" << std::endl; 
+}
+
 int main(int argc, char ** argv) {
 
     // not needed but I don't want to work with char ** :)
@@ -85,7 +174,7 @@ int main(int argc, char ** argv) {
             print_help_text();
             return 0;
         }
-        std::cout << "TODO" << std::endl;
+        proj_2(args);
     } else if (mode == "--proj3") {
         if (received_params != kProj3ArgsNumber) {
             print_help_text();
