@@ -11,15 +11,13 @@ namespace {
 
 } // anonymous
 
-template <class ArrivalTimeGenerator, class ServiceTimeGenerator>
+template <class ArrivalTimeGenerator>
 class IncomingCustomers {
 public:
     IncomingCustomers(const SimulationTimer & simulation_timer,
-                      const ArrivalTimeGenerator & arrival_time_generator,
-                      const ServiceTimeGenerator & service_time_generator)
+                      const ArrivalTimeGenerator & arrival_time_generator)
     : simulation_timer_(simulation_timer)
     , arrival_time_generator_(arrival_time_generator)
-    , service_time_generator_(service_time_generator)
     {}
 
     void register_for_customers(const CustomerRequest & callback)
@@ -36,8 +34,7 @@ private:
     void generate_customer()
     {
         auto arrival_time = last_arrival_time_ + arrival_time_generator_.generate();
-        auto service_time = service_time_generator_.generate();
-        auto customer = make_customer(id_, arrival_time, service_time);
+        auto customer = make_customer(id_, arrival_time);
 
         last_arrival_time_ = arrival_time;
         ++id_;
@@ -71,7 +68,6 @@ private:
     std::vector<CustomerRequest> customer_destinations_;
     const SimulationTimer & simulation_timer_;
     ArrivalTimeGenerator arrival_time_generator_;
-    ServiceTimeGenerator service_time_generator_;
     std::uint32_t id_ = 0;
     float last_arrival_time_ = 0;
 };

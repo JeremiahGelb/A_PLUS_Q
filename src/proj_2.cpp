@@ -83,11 +83,13 @@ SimulationRunStats do_one_run(float lambda,
     };
 
     auto incoming_customers = IncomingCustomers(timer,
-                                                ExponentialGenerator(lambda, service_seed),
                                                 ExponentialGenerator(kMu, arrival_seed));
 
 
-    auto queue = Queue(max_cpu_queue_customers, exit_customer, to_discipline(discipline));
+    auto queue = Queue(max_cpu_queue_customers,
+                       exit_customer,
+                       ExponentialGenerator(lambda, service_seed),
+                       to_discipline(discipline));
 
     CustomerRequest insert_into_queue = [&queue] (const std::shared_ptr<Customer> & customer) {
         queue.accept_customer(customer);

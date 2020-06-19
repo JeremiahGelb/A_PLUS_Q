@@ -113,40 +113,41 @@ void test_customer()
 {
     constexpr std::uint32_t kFirstCustomerId = 1;
     constexpr float kFirstCustomerArrivalTime = 2.0;
-    constexpr float kFirstCustomerServiceTime = 3.0;
 
     constexpr auto kDefaultServiced = false;
+    constexpr float kDefaultServiceTime = 0;
     constexpr float kDefaultDepartureTime = 0;
 
-    auto first_customer = make_customer(kFirstCustomerId,
-                                                  kFirstCustomerArrivalTime,
-                                                  kFirstCustomerServiceTime);
+    auto first_customer = make_customer(kFirstCustomerId, kFirstCustomerArrivalTime);
 
     ASSERT_EQ(first_customer->id(), kFirstCustomerId, "initial id matches");
     ASSERT_EQ(first_customer->arrival_time(), kFirstCustomerArrivalTime, "initial arrival time matches");
-    ASSERT_EQ(first_customer->service_time(), kFirstCustomerServiceTime, "initial service time matches");
+    ASSERT_EQ(first_customer->service_time(), kDefaultServiceTime, "initial service time matches");
     ASSERT_EQ(first_customer->serviced(), kDefaultServiced, "initial serviced matches");
     ASSERT_EQ(first_customer->departure_time(), kDefaultDepartureTime, "initial departure time matches");
 
-    constexpr auto new_serviced = true;
-    constexpr float new_departure_time = 10.5;
+    constexpr auto kNewServiced = true;
+    constexpr float kNewDepartureTime = 10.5;
+    constexpr float kNewServiceTime = 1.234;
 
-    first_customer->set_serviced(new_serviced);
-    first_customer->set_departure_time(new_departure_time);
+    first_customer->set_serviced(kNewServiced);
+    first_customer->set_departure_time(kNewDepartureTime);
+    first_customer->set_service_time(kNewServiceTime);
 
-    ASSERT_EQ(first_customer->serviced(), new_serviced, "new serviced matches");
-    ASSERT_EQ(first_customer->departure_time(), new_departure_time, "new departure time matches");
+    ASSERT_EQ(first_customer->serviced(), kNewServiced, "new serviced matches");
+    ASSERT_EQ(first_customer->departure_time(), kNewDepartureTime, "new departure time matches");
+    ASSERT_EQ(first_customer->service_time(), kNewServiceTime, "new service time matches");
 
     auto first_customer_string = first_customer->to_string();
-    const std::string kExpectedString = "1,2,3,1,10.5";
+    const std::string kExpectedString = "1,2,1.234,1,10.5";
     ASSERT_EQ(first_customer_string, kExpectedString, "to string works as expected");
 
     auto second_customer = make_customer(kExpectedString);
     ASSERT_EQ(second_customer->id(), kFirstCustomerId, "second_customer id matches");
     ASSERT_EQ(second_customer->arrival_time(), kFirstCustomerArrivalTime, "second_customer arrival time matches");
-    ASSERT_EQ(second_customer->service_time(), kFirstCustomerServiceTime, "second_customer service time matches");
-    ASSERT_EQ(second_customer->serviced(), new_serviced, "second_customer serviced matches");
-    ASSERT_EQ(second_customer->departure_time(), new_departure_time, "second_customer departure time matches");
+    ASSERT_EQ(second_customer->service_time(), kNewServiceTime, "second_customer service time matches");
+    ASSERT_EQ(second_customer->serviced(), kNewServiced, "second_customer serviced matches");
+    ASSERT_EQ(second_customer->departure_time(), kNewDepartureTime, "second_customer departure time matches");
 
     ASSERT_EQ(*first_customer, *second_customer, "customer == works");
 }
@@ -195,10 +196,7 @@ void test_incoming_customers()
 
     SimulationTimer timer;
 
-    auto incoming_customers = IncomingCustomers<ExponentialGenerator,
-                                                ExponentialGenerator>(timer,
-                                                                      ExponentialGenerator(1, 0),
-                                                                      ExponentialGenerator(1, 10));
+    auto incoming_customers = IncomingCustomers(timer, ExponentialGenerator(1, 0));
 
     incoming_customers.register_for_customers(customer_callback);
     ASSERT_EQ(customer_list.size(), std::size_t(0), "empty before start");
@@ -219,8 +217,7 @@ void test_incoming_customers()
     timer.advance_time();
     timer.advance_time();
 
-    float last_arrival_time = 0.0;
-    float last_service_time = 0.0;
+    float last_arrival_time = float(0.0);
 
     for (std::uint32_t i = 0; i < customer_list.size(); i++) {
         auto & customer = customer_list[i];
@@ -229,10 +226,6 @@ void test_incoming_customers()
         auto arrival_time = customer->arrival_time();
         ASSERT_GT(arrival_time, last_arrival_time, "times are increasing");
         last_arrival_time = arrival_time;
-
-        auto service_time = customer->service_time();
-        ASSERT_NEQ(service_time, last_service_time, "service times are different");
-        last_service_time = service_time;
     }
 
 }
@@ -246,7 +239,8 @@ void test_fcfs_queue()
         rejected_customers.push_back(customer);
     };
 
-    auto queue = Queue(kMaxSize, exit_customer);
+    constexpr float kLambda = 1;
+    auto queue = Queue(kMaxSize, exit_customer, ExponentialGenerator(kLambda));
 
     ASSERT_EQ(queue.size(), std::size_t(0), "queue empty at start");
 
@@ -261,7 +255,7 @@ void test_fcfs_queue()
     };
 
     // testing basic functionality
-    insert(make_customer(0, 1.1, 1.1));
+    insert(make_customer(0, 1.1));
     ASSERT_EQ(queue.size(), std::size_t(1), "queue now has one customer");
 
     queue.request_one_customer(request);
@@ -270,9 +264,9 @@ void test_fcfs_queue()
 
     queue.request_one_customer(request);
     queue.request_one_customer(request);
-    insert(make_customer(1, 1.1, 1.1));
+    insert(make_customer(1, 1.1));
     ASSERT_EQ(queue.size(), std::size_t(0), "first pending request fulfilled");
-    insert(make_customer(2, 1.1, 1.1));
+    insert(make_customer(2, 1.1));
     ASSERT_EQ(queue.size(), std::size_t(0), "second pending request fulfilled");
     ASSERT_EQ(received_customers.size(), std::size_t(3), "got all those customers");
 
@@ -280,15 +274,16 @@ void test_fcfs_queue()
     // testing customers are delivered FIFO
     received_customers.clear();
     ASSERT(received_customers.size() == 0, "clear");
-    insert(make_customer(0, 1.1, 1.1));
-    insert(make_customer(1, 1.1, 1.1));
-    insert(make_customer(2, 1.1, 1.1));
+    insert(make_customer(0, 1.1));
+    insert(make_customer(1, 1.1));
+    insert(make_customer(2, 1.1));
     queue.request_one_customer(request);
     queue.request_one_customer(request);
     queue.request_one_customer(request);
     std::uint32_t counter = 0;
     for (const auto & customer : received_customers) {
         ASSERT_EQ(customer->id(), counter, "customers are fifo");
+        ASSERT_NEQ(customer->service_time(), float(0.0), "queue sets service time");
         ++counter;
     }
 
@@ -302,8 +297,8 @@ void test_fcfs_queue()
     };
     queue.request_one_customer(request_1);
     queue.request_one_customer(request_2);
-    insert(make_customer(0, 1.1, 1.1));
-    insert(make_customer(1, 1.1, 1.1));
+    insert(make_customer(0, 1.1));
+    insert(make_customer(1, 1.1));
     ASSERT_EQ(call_order.size(), std::size_t(2), "both got handled");
     ASSERT_EQ(call_order[0], 0, "first handled first");
     ASSERT_EQ(call_order[1], 1, "second handled second");
@@ -311,12 +306,12 @@ void test_fcfs_queue()
     // testing max size
     ASSERT_EQ(queue.size(), std::size_t(0), "queue empty before testing max");
     for(std::size_t i = 0; i < kMaxSize; i++) {
-        insert(make_customer(0, 1.1, 1.1));
+        insert(make_customer(0, 1.1));
     }
     
     ASSERT_EQ(rejected_customers.size(), std::size_t(0), "no rejected customers");
     ASSERT_EQ(queue.size(), kMaxSize, "queue is at max");
-    insert(make_customer(0, 1.1, 1.1));
+    insert(make_customer(0, 1.1));
     ASSERT_EQ(queue.size(), kMaxSize, "queue didn't excede max");
     ASSERT_EQ(rejected_customers.size(), std::size_t(1), "one rejected customer");
 }
@@ -331,7 +326,11 @@ void test_lcfs_queue()
         rejected_customers.push_back(customer);
     };
 
-    auto queue = Queue(kMaxSize, exit_customer, queueing::Discipline::LCFS_NP);
+    constexpr float kLambda = 1;
+    auto queue = Queue(kMaxSize,
+                       exit_customer,
+                       ExponentialGenerator(kLambda),
+                       queueing::Discipline::LCFS_NP);
 
     ASSERT_EQ(queue.size(), std::size_t(0), "queue empty at start");
 
@@ -346,7 +345,7 @@ void test_lcfs_queue()
     };
 
     // testing basic functionality
-    insert(make_customer(0, 1.1, 1.1));
+    insert(make_customer(0, 1.1));
     ASSERT_EQ(queue.size(), std::size_t(1), "queue now has one customer");
 
     queue.request_one_customer(request);
@@ -355,9 +354,9 @@ void test_lcfs_queue()
 
     queue.request_one_customer(request);
     queue.request_one_customer(request);
-    insert(make_customer(1, 1.1, 1.1));
+    insert(make_customer(1, 1.1));
     ASSERT_EQ(queue.size(), std::size_t(0), "first pending request fulfilled");
-    insert(make_customer(2, 1.1, 1.1));
+    insert(make_customer(2, 1.1));
     ASSERT_EQ(queue.size(), std::size_t(0), "second pending request fulfilled");
     ASSERT_EQ(received_customers.size(), std::size_t(3), "got all those customers");
 
@@ -365,15 +364,16 @@ void test_lcfs_queue()
     // testing customers are delivered FIFO
     received_customers.clear();
     ASSERT(received_customers.size() == 0, "clear");
-    insert(make_customer(2, 1.1, 1.1));
-    insert(make_customer(1, 1.1, 1.1));
-    insert(make_customer(0, 1.1, 1.1));
+    insert(make_customer(2, 1.1));
+    insert(make_customer(1, 1.1));
+    insert(make_customer(0, 1.1));
     queue.request_one_customer(request);
     queue.request_one_customer(request);
     queue.request_one_customer(request);
     std::uint32_t counter = 0;
     for (const auto & customer : received_customers) {
         ASSERT_EQ(customer->id(), counter, "customers are lifo");
+        ASSERT_NEQ(customer->service_time(), float(0.0), "queue sets service time");
         ++counter;
     }
 
@@ -387,8 +387,8 @@ void test_lcfs_queue()
     };
     queue.request_one_customer(request_1);
     queue.request_one_customer(request_2);
-    insert(make_customer(0, 1.1, 1.1));
-    insert(make_customer(1, 1.1, 1.1));
+    insert(make_customer(0, 1.1));
+    insert(make_customer(1, 1.1));
     ASSERT_EQ(call_order.size(), std::size_t(2), "both got handled");
     ASSERT_EQ(call_order[0], 0, "first handled first");
     ASSERT_EQ(call_order[1], 1, "second handled second");
@@ -396,12 +396,12 @@ void test_lcfs_queue()
     // testing max size
     ASSERT_EQ(queue.size(), std::size_t(0), "queue empty before testing max");
     for(std::size_t i = 0; i < kMaxSize; i++) {
-        insert(make_customer(0, 1.1, 1.1));
+        insert(make_customer(0, 1.1));
     }
     
     ASSERT_EQ(rejected_customers.size(), std::size_t(0), "no rejected customers");
     ASSERT_EQ(queue.size(), kMaxSize, "queue is at max");
-    insert(make_customer(0, 1.1, 1.1));
+    insert(make_customer(0, 1.1));
     ASSERT_EQ(queue.size(), kMaxSize, "queue didn't excede max");
     ASSERT_EQ(rejected_customers.size(), std::size_t(1), "one rejected customer");
 }
@@ -416,7 +416,11 @@ void test_sjf_queue()
         rejected_customers.push_back(customer);
     };
 
-    auto queue = Queue(kMaxSize, exit_customer, queueing::Discipline::SJF_NP);
+    constexpr float kLambda = 1;
+    auto queue = Queue(kMaxSize,
+                       exit_customer,
+                       ExponentialGenerator(kLambda),
+                       queueing::Discipline::SJF_NP);
 
     ASSERT_EQ(queue.size(), std::size_t(0), "queue empty at start");
 
@@ -431,7 +435,7 @@ void test_sjf_queue()
     };
 
     // testing basic functionality
-    insert(make_customer(0, 1.1, 1.1));
+    insert(make_customer(0, 1.1));
     ASSERT_EQ(queue.size(), std::size_t(1), "queue now has one customer");
 
     queue.request_one_customer(request);
@@ -440,9 +444,9 @@ void test_sjf_queue()
 
     queue.request_one_customer(request);
     queue.request_one_customer(request);
-    insert(make_customer(1, 1.1, 1.1));
+    insert(make_customer(1, 1.1));
     ASSERT_EQ(queue.size(), std::size_t(0), "first pending request fulfilled");
-    insert(make_customer(2, 1.1, 1.1));
+    insert(make_customer(2, 1.1));
     ASSERT_EQ(queue.size(), std::size_t(0), "second pending request fulfilled");
     ASSERT_EQ(received_customers.size(), std::size_t(3), "got all those customers");
 
@@ -450,15 +454,19 @@ void test_sjf_queue()
     // testing customers are delivered SJF
     received_customers.clear();
     ASSERT(received_customers.size() == 0, "clear");
-    insert(make_customer(2, 1.1, 2));
-    insert(make_customer(0, 1.1, 1));
-    insert(make_customer(1, 1.1, 1.5));
+    insert(make_customer(0, 1.1));
+    insert(make_customer(1, 1.1));
+    insert(make_customer(2, 1.1));
     queue.request_one_customer(request);
     queue.request_one_customer(request);
     queue.request_one_customer(request);
     std::uint32_t counter = 0;
+
+    float previous_service_time = float(0.0);
     for (const auto & customer : received_customers) {
-        ASSERT_EQ(customer->id(), counter, "customers are SJF");
+        auto incoming_service_time = customer->service_time();
+        ASSERT_GT(incoming_service_time, previous_service_time, "customers are SJF");
+        previous_service_time = incoming_service_time;
         ++counter;
     }
 
@@ -472,8 +480,8 @@ void test_sjf_queue()
     };
     queue.request_one_customer(request_1);
     queue.request_one_customer(request_2);
-    insert(make_customer(0, 1.1, 1.1));
-    insert(make_customer(1, 1.1, 1.1));
+    insert(make_customer(0, 1.1));
+    insert(make_customer(1, 1.1));
     ASSERT_EQ(call_order.size(), std::size_t(2), "both got handled");
     ASSERT_EQ(call_order[0], 0, "first handled first");
     ASSERT_EQ(call_order[1], 1, "second handled second");
@@ -481,12 +489,12 @@ void test_sjf_queue()
     // testing max size
     ASSERT_EQ(queue.size(), std::size_t(0), "queue empty before testing max");
     for(std::size_t i = 0; i < kMaxSize; i++) {
-        insert(make_customer(0, 1.1, 1.1));
+        insert(make_customer(0, 1.1));
     }
     
     ASSERT_EQ(rejected_customers.size(), std::size_t(0), "no rejected customers");
     ASSERT_EQ(queue.size(), kMaxSize, "queue is at max");
-    insert(make_customer(0, 1.1, 1.1));
+    insert(make_customer(0, 1.1));
     ASSERT_EQ(queue.size(), kMaxSize, "queue didn't excede max");
     ASSERT_EQ(rejected_customers.size(), std::size_t(1), "one rejected customer");
 }
@@ -501,7 +509,9 @@ void test_server()
 
     auto call_count = 0;
     CustomerRequestHandler customer_request_handler = [&call_count] (const CustomerRequest & request) {
-        request(make_customer(kId, kArrivalTime, kServiceTime));
+        auto customer = make_customer(kId, kArrivalTime);
+        customer->set_service_time(kServiceTime);
+        request(customer);
         ++call_count;
     };
 

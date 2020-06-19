@@ -83,11 +83,18 @@ public:
         return departure_time_;
     }
 
-    void set_serviced(bool serviced) {
+    void set_service_time(float service_time)
+    {
+        service_time_ = service_time;
+    }
+
+    void set_serviced(bool serviced)
+    {
         serviced_ = serviced;
     }
 
-    void set_departure_time(float departure_time) {
+    void set_departure_time(float departure_time)
+    {
         departure_time_ = departure_time;
     }
 
@@ -109,10 +116,9 @@ inline bool operator==(const Customer & lhs, const Customer & rhs)
 }
 
 inline std::shared_ptr<Customer> make_customer(std::uint32_t id,
-                                               float arrrival_time,
-                                               float service_time)
+                                               float arrrival_time)
 {
-    return std::make_shared<Customer>(id, arrrival_time, service_time, false, 0.0);
+    return std::make_shared<Customer>(id, arrrival_time, 0.0, false, 0.0);
 }
 
 inline std::shared_ptr<Customer> make_customer(std::string str)
