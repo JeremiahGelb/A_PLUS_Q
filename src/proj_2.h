@@ -37,4 +37,18 @@ SimulationRunStats do_one_run(float lambda,
                               Discipline discipline,
                               long seed_offset);
 
+SimulationRunStats do_m_m_1_k(float lambda,
+                              std::size_t max_cpu_queue_customers,
+                              std::size_t customers_to_serve,
+                              Discipline discipline,
+                              long seed_offset);
+
+SimulationRunStats do_web_server(float lambda,
+                                 std::size_t max_cpu_queue_customers,
+                                 std::size_t max_io_queue_customers,
+                                 std::size_t customers_to_serve,
+                                 Discipline discipline,
+                                 long seed_offset);
+
+
 }

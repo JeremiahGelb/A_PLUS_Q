@@ -10,6 +10,7 @@
 #include "server.h"
 
 namespace {
+
 queueing::Discipline to_discipline(project2::Discipline discipline)
 {
     switch(discipline) {
@@ -81,14 +82,35 @@ void run_project_2(float lambda,
 
 SimulationRunStats do_one_run(float lambda,
                               std::size_t max_cpu_queue_customers,
-                              std::size_t /* max_io_queue_customers */,
+                              std::size_t max_io_queue_customers,
                               std::size_t customers_to_serve,
-                              Mode /* mode */,
+                              Mode mode,
                               Discipline discipline,
                               long seed_offset)
 {
-    // TODO make this do proj2
-    // set up simulation
+    switch (mode) {
+    case Mode::MM1:
+        return do_m_m_1_k(lambda,
+                          max_cpu_queue_customers,
+                          customers_to_serve,
+                          discipline,
+                          seed_offset);
+    case Mode::CPU:
+        return do_web_server(lambda,
+                             max_cpu_queue_customers,
+                             max_io_queue_customers,
+                             customers_to_serve,
+                             discipline,
+                             seed_offset);
+    }
+}
+
+SimulationRunStats do_m_m_1_k(float lambda,
+                              std::size_t max_cpu_queue_customers,
+                              std::size_t customers_to_serve,
+                              Discipline discipline,
+                              long seed_offset)
+{
     constexpr float kMu = 1.0;
     long service_seed = 1234 + seed_offset;
     long arrival_seed = 4321 + seed_offset;
@@ -141,7 +163,17 @@ SimulationRunStats do_one_run(float lambda,
     return SimulationRunStats(spy.customer_loss_rate(),
                               spy.average_waiting_time(),
                               spy.average_system_time());
+}
 
+SimulationRunStats do_web_server(float /* lambda */,
+                                 std::size_t /* max_cpu_queue_customers */,
+                                 std::size_t /* max_io_queue_customers */,
+                                 std::size_t /* customers_to_serve */,
+                                 Discipline /* discipline */,
+                                 long /* seed_offset */)
+{
+    throw std::invalid_argument("TODO: implement do_web_server");
+    return SimulationRunStats(0,0,0);
 }
 
 } // project2
