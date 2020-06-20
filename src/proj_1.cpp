@@ -20,8 +20,8 @@ void run_project_1(const float lambda,
                   << ", max queue customers: " << max_queue_customers
                   << ", customers_to_serve: " << customers_to_serve
                   << ", L" << L << std::endl;
-
     }
+
     // set up simulation
     constexpr float kMu = 1.0;
     constexpr long kServiceSeed = 1234 + constants::SEED_OFFSET;

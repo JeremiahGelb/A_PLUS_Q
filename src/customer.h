@@ -19,7 +19,7 @@ public:
     , departure_time_(departure_time)
     {}
 
-    Customer(std::string str)
+    Customer(const std::string & str)
     {
         char comma;
         std::uint32_t id;

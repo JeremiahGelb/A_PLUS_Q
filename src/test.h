@@ -14,6 +14,7 @@ Color::Modifier yellow(Color::FG_YELLOW);
 Color::Modifier def(Color::FG_DEFAULT);
 
 } // anon
+
 namespace testing {
 
 struct TestFailure : public std::exception
@@ -29,7 +30,6 @@ struct TestFailure : public std::exception
     	return info_.c_str();
     }
 };
-
 
 inline void ASSERT(bool condition, const std::string & explanation = "")
 {
@@ -93,7 +93,6 @@ inline void ASSERT_GT(const L & lhs, const R & rhs, const std::string & explanat
     }
     ASSERT(lhs > rhs, explanation);
 }
-
 
 void run_all_tests();
 

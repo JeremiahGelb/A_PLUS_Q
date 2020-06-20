@@ -36,7 +36,8 @@ void Server::on_customer_entered_server(const std::shared_ptr<Customer> & custom
     ); 
 }
 
-void Server::on_customer_serviced(const std::shared_ptr<Customer> & customer) {
+void Server::on_customer_serviced(const std::shared_ptr<Customer> & customer)
+{
     customer->set_serviced(true);
     customer->set_departure_time(simulation_timer_.time());
 

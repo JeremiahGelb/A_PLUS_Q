@@ -74,4 +74,4 @@ std::string confidence_interval_string(const Container & items)
     return ss.str();
 }
 
-} // stat
+} // statistics

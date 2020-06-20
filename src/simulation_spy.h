@@ -43,8 +43,6 @@ public:
     float average_system_time() const;
     void print_stats() const;
 
-
-
 private:
     void save_default_stats(const std::shared_ptr<Customer> & customer);
     void save_additional_stats(const std::shared_ptr<Customer> & customer);
@@ -63,5 +61,4 @@ private:
     float total_system_time_;
 
     std::vector<std::string> additional_stats_;
-
 };
