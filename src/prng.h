@@ -21,3 +21,12 @@ public:
 private:
     float one_over_lambda_;
 };
+
+class UniformGenerator : public RandomNumberGenerator {
+public:
+    UniformGenerator(long seed = 0)
+    : RandomNumberGenerator(seed)
+    {}
+
+    float generate() override;
+};

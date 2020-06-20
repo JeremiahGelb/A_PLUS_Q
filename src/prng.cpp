@@ -36,3 +36,8 @@ float ExponentialGenerator::generate()
    // will modify seed
    return one_over_lambda_*expdev(&seed_);
 }
+
+float UniformGenerator::generate()
+{
+   return ran0(&seed_);
+}

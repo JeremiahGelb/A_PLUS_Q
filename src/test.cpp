@@ -184,6 +184,14 @@ void test_prng()
     }
 
     ASSERT_GT(small_lambda_sum, big_lambda_sum, "large lambda produces small values");
+
+    auto uniform_generator = UniformGenerator(kSeed);
+    constexpr auto kUniformChecks = 100;
+    for (auto i = 0; i < kUniformChecks; ++i) {
+        auto uniform_float = uniform_generator.generate();
+        ASSERT_GT(uniform_float, float(0.0), "Greater than 0");
+        ASSERT_LT(uniform_float, float(1.0), "Less than 1");
+    }
 }
 
 void test_incoming_customers()
