@@ -74,14 +74,10 @@ void SimulationSpy::save_default_stats(const std::shared_ptr<Customer> & custome
     if (customer->serviced()) {
         ++serviced_customers_;
 
-        const auto service_time = customer->service_time();
-        const auto waiting_time = customer->departure_time()
-                                  - customer->arrival_time()
-                                  - service_time;
-
         // only save these stats for serviced customers
-        total_waiting_time_ += waiting_time;
-        total_service_time_ += service_time;
+        total_waiting_time_ += customer->waiting_time();
+        total_service_time_ += customer->service_time();
+        total_system_time_ += customer->system_time();
     } else {
         ++lost_customers_;
     }
@@ -104,14 +100,34 @@ void SimulationSpy::save_additional_stats(const std::shared_ptr<Customer> & cust
     additional_stats_.push_back(ss.str());
 }
 
-void SimulationSpy::print_stats()
+float SimulationSpy::customer_loss_rate() const
+{
+    return float(lost_customers_) / entered_customers_;
+}
+
+float SimulationSpy::average_service_time() const
+{
+    return total_service_time_ / serviced_customers_;
+}
+
+float SimulationSpy::average_waiting_time() const
+{
+    return total_waiting_time_ / serviced_customers_;
+}
+
+float SimulationSpy::average_system_time() const
+{
+    return total_system_time_ / serviced_customers_;
+}
+
+void SimulationSpy::print_stats() const
 {
     std::cout << "CLR = "
               << lost_customers_
               << "/"
               << entered_customers_
               << " = "
-              << float(lost_customers_) / entered_customers_
+              << customer_loss_rate()
               << std::endl;
 
     std::cout << "Average Service Time = "
@@ -119,10 +135,10 @@ void SimulationSpy::print_stats()
               << "/"
               << serviced_customers_
               << " = "
-              << total_service_time_ / serviced_customers_
+              << average_service_time()
               << std::endl;
 
-    std::cout << "Average Waiting Time = "
+    std::cout << average_waiting_time()
               << total_waiting_time_
               << "/"
               << serviced_customers_

@@ -20,6 +20,7 @@ public:
     , lost_customers_(0)
     , total_waiting_time_(0)
     , total_service_time_(0)
+    , total_system_time_(0)
     , additional_stats_()
     {
         // because the most customers in the server is known and small
@@ -36,7 +37,11 @@ public:
     void on_customer_entering(const std::shared_ptr<Customer> & customer);
     void on_customer_exiting(const std::shared_ptr<Customer> & customer);
 
-    void print_stats();
+    float customer_loss_rate() const;
+    float average_service_time() const;
+    float average_waiting_time() const;
+    float average_system_time() const;
+    void print_stats() const;
 
 
 
@@ -55,6 +60,7 @@ private:
     std::uint32_t lost_customers_;
     float total_waiting_time_;
     float total_service_time_;
+    float total_system_time_;
 
     std::vector<std::string> additional_stats_;
 

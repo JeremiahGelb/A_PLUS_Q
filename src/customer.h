@@ -66,18 +66,37 @@ public:
     {
         return id_;
     }
+
     float arrival_time() const
     {
         return arrival_time_;
     }
+
     float service_time() const
     {
         return service_time_;
     }
+
     bool serviced() const
     {
         return serviced_;
     }
+
+    float system_time() const
+    {
+        // TODO: unit test
+        return departure_time_ - arrival_time_;
+    }
+
+    float waiting_time() const
+    {
+        // TODO: unit test
+        // TODO: fix for multi queue case
+        return departure_time_
+               - arrival_time_
+               - service_time_;
+    }
+
     float departure_time() const
     {
         return departure_time_;

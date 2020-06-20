@@ -4,5 +4,5 @@ namespace constants {
     constexpr auto DEBUG_ENABLED = false;
     constexpr auto STRICT_TEST_TYPES = true;
     constexpr auto PRINT_STATS = true;
-    constexpr auto SEED_OFFSET = 100000;
+    constexpr auto SEED_OFFSET = 10000;
 }

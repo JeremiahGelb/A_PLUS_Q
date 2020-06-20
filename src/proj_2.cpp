@@ -39,22 +39,43 @@ void run_project_2(float lambda,
                    Discipline discipline,
                    const int runs)
 {
+    std::vector<float> customer_loss_rates;
+    std::vector<float> waiting_times; // TODO: (will need to split this up by priority)
+    std::vector<float> system_times;
     for (auto i = 0; i < runs; ++i) {
-        if (constants::DEBUG_ENABLED) {
+        if (constants::PRINT_STATS) {
             std::cout << std::endl << "STARTING RUN: " << i << std::endl;
         }
 
-        do_one_run(lambda,
-                   max_cpu_queue_customers,
-                   max_io_queue_customers,
-                   customers_to_serve,
-                   mode,
-                   discipline,
-                   i*constants::SEED_OFFSET);
+        auto stat = do_one_run(lambda,
+                               max_cpu_queue_customers,
+                               max_io_queue_customers,
+                               customers_to_serve,
+                               mode,
+                               discipline,
+                               i*constants::SEED_OFFSET);
 
-        if (constants::DEBUG_ENABLED) {
+        customer_loss_rates.push_back(stat.customer_loss_rate());
+        waiting_times.push_back(stat.average_waiting_time());
+        system_times.push_back(stat.average_system_time());
+
+        if (constants::PRINT_STATS) {
             std::cout << std::endl << "ENDING RUN: " << i << std::endl;
         }
+    }
+
+    if (constants::PRINT_STATS) {
+        std::cout << "Customer Loss Rate: "
+                  << statistics::confidence_interval_string(customer_loss_rates)
+                  << std::endl;
+
+        std::cout << "Waiting Time: "
+                  << statistics::confidence_interval_string(waiting_times)
+                  << std::endl;
+
+        std::cout << "System Time "
+                  << statistics::confidence_interval_string(system_times)
+                  << std::endl;
     }
 }
 
@@ -117,11 +138,10 @@ SimulationRunStats do_one_run(float lambda,
         timer.advance_time();
     }
 
-    if (constants::PRINT_STATS) {
-        spy.print_stats();
-    }
+    return SimulationRunStats(spy.customer_loss_rate(),
+                              spy.average_waiting_time(),
+                              spy.average_system_time());
 
-    return SimulationRunStats(); // TODO
 }
 
 } // project2
