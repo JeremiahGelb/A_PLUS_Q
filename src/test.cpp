@@ -11,6 +11,7 @@
 #include "incoming_customers.h"
 #include "queue.h"
 #include "server.h"
+#include "random_load_balancer.h"
 
 namespace testing {
 
@@ -27,7 +28,8 @@ void run_all_tests()
         std::make_pair("fcfs queue", test_fcfs_queue),
         std::make_pair("lcfs_queue", test_lcfs_queue),
         std::make_pair("sjf_queue", test_sjf_queue),
-        std::make_pair("Server", test_server)
+        std::make_pair("Server", test_server),
+        std::make_pair("Random Load Balancer", test_random_load_balancer)
     };
 
     auto failure_count = 0;
@@ -538,6 +540,49 @@ void test_server()
     timer.advance_time();
     ASSERT_EQ(call_count, 2, "Called twice");
     ASSERT_EQ(serviced_customers.size(), size_t(1), "one serviced)");
+}
+
+void test_random_load_balancer()
+{
+    auto customer_list_1 = std::vector<std::shared_ptr<Customer>>();
+    auto customer_list_2 = std::vector<std::shared_ptr<Customer>>();
+    auto customer_list_3 = std::vector<std::shared_ptr<Customer>>();
+
+    CustomerRequest to_list_1 = [&customer_list_1] (const std::shared_ptr<Customer> & customer) {
+        customer_list_1.push_back(customer);
+    };
+
+    CustomerRequest to_list_2 = [&customer_list_2] (const std::shared_ptr<Customer> & customer) {
+        customer_list_2.push_back(customer);
+    };
+
+    CustomerRequest to_list_3 = [&customer_list_3] (const std::shared_ptr<Customer> & customer) {
+        customer_list_3.push_back(customer);
+    };
+
+    constexpr float kList1UpperProbability = .1;
+    constexpr float kList2UpperProbability = .4;
+    constexpr float kList3UpperProbability = 1.0;
+    std::vector<RandomLoadBalancerTarget> targets = {std::make_pair(to_list_1, kList1UpperProbability),
+                                                     std::make_pair(to_list_2, kList2UpperProbability),
+                                                     std::make_pair(to_list_3, kList3UpperProbability)};
+                                                     
+    auto balancer = RandomLoadBalancer(targets, UniformGenerator());
+
+    constexpr auto kCustomers = 100;
+    for (auto i = 0; i < kCustomers; ++i) {
+        balancer.route_customer(make_customer(0,0));
+    }
+
+    if (constants::DEBUG_ENABLED) {
+        std::cout << customer_list_1.size()
+                  << " " << customer_list_2.size()
+                  << " " << customer_list_3.size() 
+                  << std::endl;
+    }
+
+    ASSERT_GT(customer_list_2.size(), customer_list_1.size(), "~30% bigger than ~10%");
+    ASSERT_GT(customer_list_3.size(), customer_list_2.size(), "~60% bigger than ~30%");
 }
 
 } // testing

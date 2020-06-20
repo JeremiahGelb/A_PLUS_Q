@@ -106,5 +106,6 @@ void test_fcfs_queue();
 void test_lcfs_queue();
 void test_sjf_queue();
 void test_server();
+void test_random_load_balancer();
 
 } // testing
