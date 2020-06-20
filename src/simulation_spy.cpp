@@ -75,7 +75,7 @@ void SimulationSpy::save_default_stats(const std::shared_ptr<Customer> & custome
         ++serviced_customers_;
 
         // only save these stats for serviced customers
-        total_waiting_time_ += customer->waiting_time();
+        total_waiting_time_ += customer->total_waiting_time();
         total_service_time_ += customer->service_time();
         total_system_time_ += customer->system_time();
     } else {

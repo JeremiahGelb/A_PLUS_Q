@@ -29,7 +29,8 @@ void run_all_tests()
         std::make_pair("lcfs_queue", test_lcfs_queue),
         std::make_pair("sjf_queue", test_sjf_queue),
         std::make_pair("Server", test_server),
-        std::make_pair("Random Load Balancer", test_random_load_balancer)
+        std::make_pair("Random Load Balancer", test_random_load_balancer),
+        std::make_pair("Customer events", test_customer_events)
     };
 
     auto failure_count = 0;
@@ -250,7 +251,7 @@ void test_fcfs_queue()
     };
 
     constexpr float kLambda = 1;
-    auto queue = Queue(kMaxSize, exit_customer, ExponentialGenerator(kLambda));
+    auto queue = Queue(kMaxSize, exit_customer, ExponentialGenerator(kLambda), []{ return 0; });
 
     ASSERT_EQ(queue.size(), std::size_t(0), "queue empty at start");
 
@@ -340,6 +341,7 @@ void test_lcfs_queue()
     auto queue = Queue(kMaxSize,
                        exit_customer,
                        ExponentialGenerator(kLambda),
+                       []{ return 0; },
                        queueing::Discipline::LCFS_NP);
 
     ASSERT_EQ(queue.size(), std::size_t(0), "queue empty at start");
@@ -430,6 +432,7 @@ void test_sjf_queue()
     auto queue = Queue(kMaxSize,
                        exit_customer,
                        ExponentialGenerator(kLambda),
+                       []{ return 0; },
                        queueing::Discipline::SJF_NP);
 
     ASSERT_EQ(queue.size(), std::size_t(0), "queue empty at start");
@@ -583,6 +586,42 @@ void test_random_load_balancer()
 
     ASSERT_GT(customer_list_2.size(), customer_list_1.size(), "~30% bigger than ~10%");
     ASSERT_GT(customer_list_3.size(), customer_list_2.size(), "~60% bigger than ~30%");
+}
+
+void test_customer_events()
+{
+    auto customer = make_customer(0,0);
+    customer->set_serviced(true);
+
+    constexpr float kEnteredQueue = 1.0;
+    constexpr float kExitedQueue = 2.0;
+
+    constexpr float kEnteredServer = 2.0;
+    constexpr float kExitedServer = 5.0;
+
+    std::string queue_name_1("queue1");
+    std::string queue_name_2("queue2");
+    std::string server_name("server");
+
+    customer->add_event(CustomerEvent(CustomerEventType::ENTERED,
+                                      PlaceType::QUEUE,
+                                      queue_name_1,
+                                      kEnteredQueue));
+    customer->add_event(CustomerEvent(CustomerEventType::EXITED,
+                                      PlaceType::QUEUE,
+                                      queue_name_1,
+                                      kExitedQueue));
+    customer->add_event(CustomerEvent(CustomerEventType::ENTERED, PlaceType::QUEUE, queue_name_2, kEnteredQueue));
+    customer->add_event(CustomerEvent(CustomerEventType::EXITED, PlaceType::QUEUE, queue_name_2, kExitedQueue));
+
+    customer->add_event(CustomerEvent(CustomerEventType::ENTERED, PlaceType::SERVER, server_name, kEnteredServer));
+    customer->add_event(CustomerEvent(CustomerEventType::EXITED, PlaceType::SERVER, server_name, kExitedServer));
+
+    ASSERT_EQ(customer->total_waiting_time(), 2*(kExitedQueue - kEnteredQueue), "total is 2");
+
+    ASSERT_EQ(customer->waiting_time(queue_name_1), (kExitedQueue - kEnteredQueue), "queue1 is 1");
+
+    ASSERT_EQ(customer->waiting_time(server_name), (kExitedServer - kEnteredServer), "server is 3");
 }
 
 } // testing

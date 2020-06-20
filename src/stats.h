@@ -36,6 +36,7 @@ private:
 
 namespace statistics {
 
+// TODO: unit test all these
 template <class Container, class T = float>
 T sample_mean(const Container & items)
 {

@@ -41,7 +41,8 @@ void run_project_1(const float lambda,
 
     auto queue = Queue(max_queue_customers,
                        exit_customer,
-                       ExponentialGenerator(kMu, kServiceSeed));
+                       ExponentialGenerator(kMu, kServiceSeed),
+                       [&timer]{ return timer.time(); });
 
     CustomerRequest insert_into_queue = [&queue] (const std::shared_ptr<Customer> & customer) {
         queue.accept_customer(customer);

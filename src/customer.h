@@ -4,6 +4,35 @@
 #include <string>
 #include <sstream>
 #include <functional>
+#include <utility>
+
+enum class CustomerEventType {
+    ENTERED,
+    EXITED,
+    DROPPED_BY
+};
+
+enum class PlaceType {
+    QUEUE,
+    SERVER
+};
+
+struct CustomerEvent {
+    CustomerEvent(const CustomerEventType event_type,
+                  const PlaceType place_type,
+                  const std::string & place_name,
+                  const float time)
+    : event_type_(event_type)
+    , place_type_(place_type)
+    , place_name_(place_name)
+    , time_(time)
+    {}
+
+    const CustomerEventType event_type_;
+    const PlaceType place_type_;
+    const std::string & place_name_;
+    const float time_;
+};
 
 class Customer {
 public:
@@ -84,17 +113,59 @@ public:
 
     float system_time() const
     {
-        // TODO: unit test
         return departure_time_ - arrival_time_;
     }
 
-    float waiting_time() const
+    float total_waiting_time() const
     {
-        // TODO: unit test
-        // TODO: fix for multi queue case
-        return departure_time_
-               - arrival_time_
-               - service_time_;
+        float waiting_time = 0.0;
+        if (!serviced_) {
+            throw std::runtime_error("Invalid to calculate waiting_time on unserviced customer");
+        }
+
+        if (events_.size() < 2) {
+            throw std::runtime_error("Too few events to calculate waiting_time");
+        }
+
+        for (std::uint32_t i = 0; i < events_.size() - 1; ++i) {
+            const auto & event = events_[i];
+            const auto & next_event = events_[i+1];
+
+            if (event.event_type_ == CustomerEventType::ENTERED && event.place_type_ == PlaceType::QUEUE) {
+                if (next_event.event_type_ == CustomerEventType::EXITED && next_event.place_name_ == event.place_name_) {
+                        waiting_time += (next_event.time_ - event.time_);
+                        // ++i // (could do this but it might not actually save time)
+                } else {
+                    throw std::runtime_error("Event following ENTER wasn't the right EXIT");
+                }
+            }
+        }
+
+        return waiting_time;
+    }
+
+    float waiting_time(const std::string & place_name) {
+        float waiting_time = 0.0;
+        if (!serviced_) {
+            throw std::runtime_error("Invalid to calculate waiting_time on unserviced customer");
+        }
+        if (events_.size() < 2) {
+            throw std::runtime_error("Too few events to calculate waiting_time");
+        }
+        for (std::uint32_t i = 0; i < events_.size() - 1; ++i) {
+            const auto & event = events_[i];
+            const auto & next_event = events_[i+1];
+
+            if (event.event_type_ == CustomerEventType::ENTERED && event.place_name_ == place_name) {
+                if (next_event.event_type_ == CustomerEventType::EXITED && next_event.place_name_ == place_name) {
+                        waiting_time += (next_event.time_ - event.time_);
+                } else {
+                    throw std::runtime_error("Event following ENTER wasn't the right EXIT");
+                }
+            }
+        }
+
+        return waiting_time;
     }
 
     float departure_time() const
@@ -117,12 +188,17 @@ public:
         departure_time_ = departure_time;
     }
 
+    void add_event(const CustomerEvent & event) {
+        events_.push_back(event);
+    }
+
 private:
     std::uint32_t id_; // unique id for debug purposes
     float arrival_time_; // time they enter system
     float service_time_; // time their job will take
     bool serviced_; // was request fulfilled
     float departure_time_;
+    std::vector<CustomerEvent> events_;
 };
 
 inline bool operator==(const Customer & lhs, const Customer & rhs)

@@ -9,6 +9,7 @@
 
 class SimulationSpy {
 public:
+    // TODO: give this guy a list of place names to collect stats about
     SimulationSpy(std::size_t L,
                   std::size_t maximum_system_customers,
                   std::uint32_t transient_period = 0)

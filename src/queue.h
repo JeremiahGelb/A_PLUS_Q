@@ -25,11 +25,15 @@ public:
     Queue(std::size_t max_size,
           const CustomerRequest & exit_customer,
           const ServiceTimeGenerator & service_time_generator,
-          queueing::Discipline discipline = queueing::Discipline::FCFS)
+          const std::function<float()> & current_time,
+          queueing::Discipline discipline = queueing::Discipline::FCFS,
+          const std::string & name = "Queue")
     : max_size_(max_size)
     , exit_customer_(exit_customer)
     , service_time_generator_(service_time_generator)
+    , current_time_(current_time)
     , discipline_(discipline)
+    , name_(name)
     {}
 
     std::size_t size()
@@ -41,11 +45,15 @@ public:
     {
 
         customer->set_service_time(service_time_generator_.generate());
+        customer->add_event(CustomerEvent(CustomerEventType::ENTERED,
+                                          PlaceType::QUEUE,
+                                          name_,
+                                          current_time_()));
         if (size() >= max_size_) {
             on_customer_rejected(customer);
         } else {
             if (constants::DEBUG_ENABLED) {
-                std::cout << "Queue::" << __func__
+                std::cout << name_ << "::" << __func__
                         << " adding customer: " << customer->to_string()
                         << std::endl;
             }
@@ -87,7 +95,12 @@ private:
         if (constants::DEBUG_ENABLED) {
             std::cout << "Queue was full. Rejected:" << customer->to_string() << std::endl;
         }
-        customer->set_departure_time(customer->arrival_time());
+        customer->set_departure_time(current_time_());
+        customer->add_event(CustomerEvent(CustomerEventType::DROPPED_BY,
+                                          PlaceType::QUEUE,
+                                          name_,
+                                          current_time_()));
+        customer->set_serviced(false);
         exit_customer_(customer);
     }
 
@@ -110,9 +123,9 @@ private:
     void handle_requests()
     {
         if (constants::DEBUG_ENABLED) {
-            std::cout << "Queue::" << __func__ << " entered with: " 
-                    << customers_.size() << " customers and " 
-                    << requests_.size() << " requests" << std::endl;
+            std::cout << name_ << "::" << __func__ << " entered with: " 
+                      << customers_.size() << " customers and " 
+                      << requests_.size() << " requests" << std::endl;
         }
 
         while ((!customers_.empty()) && (!requests_.empty())) {
@@ -120,18 +133,23 @@ private:
             auto customer_iterator = get_customer_iterator();
 
             if (constants::DEBUG_ENABLED) {
-                std::cout << "Queue::" << __func__ 
-                        << " delivering_customer: " << (*customer_iterator)->to_string() << std::endl;
+                std::cout << name_ << "::" << __func__ 
+                          << " delivering_customer: " << (*customer_iterator)->to_string() << std::endl;
             }
 
-            request(*customer_iterator);
+            auto & customer = *customer_iterator;
+            customer->add_event(CustomerEvent(CustomerEventType::EXITED,
+                                              PlaceType::QUEUE,
+                                              name_,
+                                              current_time_()));
+            request(customer);
 
             requests_.pop();
             customers_.erase(customer_iterator);
         }
 
         if (constants::DEBUG_ENABLED) {
-            std::cout << __func__ << " exited with: " 
+            std::cout << name_ << "::" << __func__ << " exited with: " 
                     << customers_.size() << " customers and " 
                     << requests_.size() << " requests" << std::endl;
         }
@@ -141,7 +159,9 @@ private:
     std::queue<std::function<void(std::shared_ptr<Customer>)>> requests_;
     std::vector<std::shared_ptr<Customer>> customers_;
     ServiceTimeGenerator service_time_generator_;
+    const std::function<float()> current_time_;
     queueing::Discipline discipline_;
+    const std::string name_;
     /*
         to support different disciplines: managing customers in a vector. Because the queue size is unlikely to be very large
         vector will be faster that std::list even for random insert/remove

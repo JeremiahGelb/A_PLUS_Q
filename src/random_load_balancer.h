@@ -2,9 +2,11 @@
 
 #include <utility>
 #include <vector>
+#include <iostream>
 
 #include "customer.h"
 #include "prng.h"
+#include "constants.h"
 
 using RandomLoadBalancerTarget = std::pair<CustomerRequest, float>;
 // Each target has the associated upper probability between 0 and 1
@@ -40,6 +42,13 @@ public:
 
         for (const auto & target : targets_) {
             if (generated_number < target.second) {
+                if (constants::DEBUG_ENABLED) {
+                    std::cout << "RandomLoadBalancer::" << __func__
+                              << " generated: " << generated_number
+                              << " and chose target with upper value: " << target.second
+                              << std::endl;
+                }
+
                 target.first(customer);
                 return;
             }

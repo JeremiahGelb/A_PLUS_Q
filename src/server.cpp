@@ -17,12 +17,17 @@ void Server::on_customer_entered_server(const std::shared_ptr<Customer> & custom
     auto departure_time = simulation_timer_.time() + customer->service_time();
 
     if (constants::DEBUG_ENABLED) {
-        std::cout << __func__ 
+        std::cout << name_ << "::" << __func__ 
                   << " got customer: " << customer->to_string() 
-                  << "at time: " << simulation_timer_.time()
+                  << " at time: " << simulation_timer_.time()
                   << " scheduling departure at time: " << departure_time
                   << std::endl;
     }
+
+    customer->add_event(CustomerEvent(CustomerEventType::ENTERED,
+                                      PlaceType::SERVER,
+                                      name_,
+                                      simulation_timer_.time()));
 
     simulation_timer_.register_job(
         departure_time,
@@ -42,8 +47,15 @@ void Server::on_customer_serviced(const std::shared_ptr<Customer> & customer)
     customer->set_departure_time(simulation_timer_.time());
 
     if (constants::DEBUG_ENABLED) {
-        std::cout << "serviced customer: " << customer->to_string() << std::endl;
+        std::cout << name_ << "::" << __func__
+                  << " serviced customer: " << customer->to_string()
+                  << std::endl;
     }
+
+    customer->add_event(CustomerEvent(CustomerEventType::EXITED,
+                                      PlaceType::SERVER,
+                                      name_,
+                                      simulation_timer_.time()));
 
     exit_customer_(customer);
 }
