@@ -5,6 +5,7 @@
 #include <sstream>
 #include <functional>
 #include <utility>
+#include <algorithm>
 
 enum class CustomerEventType {
     ENTERED,
@@ -34,6 +35,41 @@ struct CustomerEvent {
     const float time_;
 };
 
+namespace {
+
+std::string to_string(CustomerEventType type)
+{
+    switch (type) {
+    case CustomerEventType::ENTERED:
+        return "ENTERED";
+    case CustomerEventType::EXITED:
+        return "EXITED";
+    case CustomerEventType::DROPPED_BY:
+        return "DROPPED_BY";
+    }
+}
+
+std::string to_string(PlaceType type)
+{
+    switch (type) {
+    case PlaceType::QUEUE:
+        return "QUEUE";
+    case PlaceType::SERVER:
+        return "SERVER";
+    }
+}
+
+std::string to_string(const CustomerEvent & event) {
+    std::stringstream ss;
+    ss << to_string(event.event_type_)
+       << " " << to_string(event.place_type_)
+       << " " << event.place_name_
+       << " at " << event.time_;
+    return ss.str();
+}
+
+} // anonymous
+
 class Customer {
 public:
     Customer(std::uint32_t id,
@@ -48,45 +84,25 @@ public:
     , departure_time_(departure_time)
     {}
 
-    Customer(const std::string & str)
-    {
-        char comma;
-        std::uint32_t id;
-        float arrival_time;
-        float service_time;
-        bool serviced;
-        float departure_time;
-
-        std::stringstream ss(str);
-        ss >> id;
-        ss >> comma;
-        ss >> arrival_time;
-        ss >> comma;
-        ss >> service_time;
-        ss >> comma;
-        ss >> serviced;
-        ss >> comma;
-        ss >> departure_time;
-
-        id_ = id;
-        arrival_time_ = arrival_time;
-        service_time_ = service_time;
-        serviced_ = serviced;
-        departure_time_ = departure_time;
-    }
-
-    std::string to_string()
+    std::string to_string(bool verbose = false)
     {
         std::stringstream ss;
-        ss << id_
-           << ','
+        ss << "id: "
+           << id_
+           << " Arrival Time: "
            << arrival_time_
-           << ','
+           << " Service Time: "
            << service_time_
-           << ','
+           << " Serviced: "
            << serviced_
-           << ','
+           << " Derparture Time: "
            << departure_time_;
+
+        if (verbose) {
+            for (const auto & event : events_) {
+                ss << std::endl << ::to_string(event);
+            }
+        }
 
         return ss.str();
     }
@@ -144,7 +160,8 @@ public:
         return waiting_time;
     }
 
-    float waiting_time(const std::string & place_name) {
+    float waiting_time(const std::string & place_name)
+    {
         float waiting_time = 0.0;
         if (!serviced_) {
             throw std::runtime_error("Invalid to calculate waiting_time on unserviced customer");
@@ -166,6 +183,38 @@ public:
         }
 
         return waiting_time;
+    }
+
+    bool entered(const std::string & place_name)
+    {
+        for (const auto & event : events_) {
+            if (event.event_type_ == CustomerEventType::ENTERED
+                && event.place_name_ == place_name) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    std::uint32_t entrances(const std::string & place_name)
+    {
+        return std::count_if(events_.begin(),
+                             events_.end(),
+                             [&place_name](const CustomerEvent & event) {
+                                 return event.event_type_ == CustomerEventType::ENTERED
+                                        && event.place_name_ == place_name;
+                             });
+    }
+
+    std::string dropped_by()
+    {
+        const auto & event = events_.back();
+        if (event.event_type_ == CustomerEventType::DROPPED_BY) {
+            return event.place_name_;
+        } else {
+            throw std::runtime_error("dropped_by called on customer who wasn't dropped");
+            return "";
+        }
     }
 
     float departure_time() const
@@ -195,10 +244,12 @@ public:
 private:
     std::uint32_t id_; // unique id for debug purposes
     float arrival_time_; // time they enter system
-    float service_time_; // time their job will take
+    float service_time_; // time their next job will take
     bool serviced_; // was request fulfilled
     float departure_time_;
     std::vector<CustomerEvent> events_;
+    // could refactor this to just save explicitly what I need rather than save every event and calculate but
+    // this is a useful debugging tool.
 };
 
 inline bool operator==(const Customer & lhs, const Customer & rhs)
@@ -214,11 +265,6 @@ inline std::shared_ptr<Customer> make_customer(std::uint32_t id,
                                                float arrrival_time)
 {
     return std::make_shared<Customer>(id, arrrival_time, 0.0, false, 0.0);
-}
-
-inline std::shared_ptr<Customer> make_customer(std::string str)
-{
-    return std::make_shared<Customer>(str);
 }
 
 using CustomerRequest = std::function<void(const std::shared_ptr<Customer> &)>;

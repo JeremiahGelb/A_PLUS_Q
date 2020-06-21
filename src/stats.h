@@ -2,20 +2,21 @@
 
 #include <sstream>
 #include <tgmath.h>
+#include <unordered_map>
 
 class SimulationRunStats {
 public:
-    SimulationRunStats(float customer_loss_rate,
+    SimulationRunStats(const std::unordered_map<std::string, float> & customer_loss_rates,
                        float average_waiting_time,
                        float average_system_time)
-    : customer_loss_rate_(customer_loss_rate)
+    : customer_loss_rates_(customer_loss_rates)
     , average_waiting_time_(average_waiting_time)
     , average_system_time_(average_system_time)
     {}
 
-    float customer_loss_rate()
+    std::unordered_map<std::string, float> customer_loss_rates()
     {
-        return customer_loss_rate_;
+        return customer_loss_rates_;
     }
 
     float average_waiting_time()
@@ -29,7 +30,7 @@ public:
     }
 
 private:
-    float customer_loss_rate_;
+    std::unordered_map<std::string, float> customer_loss_rates_;
     float average_waiting_time_; // TODO: (will have to revamp for multi queue)
     float average_system_time_;
 };

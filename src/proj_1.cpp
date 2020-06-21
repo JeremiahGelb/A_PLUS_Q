@@ -29,7 +29,8 @@ void run_project_1(const float lambda,
 
     SimulationTimer timer;
 
-    auto spy = SimulationSpy(L, max_queue_customers + 1);
+    const std::string kQueueName = "Queue";
+    auto spy = SimulationSpy(L, max_queue_customers + 1, {kQueueName});
 
     auto exit_customer = [&spy] (const std::shared_ptr<Customer> & customer) {
         spy.on_customer_exiting(customer);
@@ -42,7 +43,9 @@ void run_project_1(const float lambda,
     auto queue = Queue(max_queue_customers,
                        exit_customer,
                        ExponentialGenerator(kMu, kServiceSeed),
-                       [&timer]{ return timer.time(); });
+                       [&timer]{ return timer.time(); },
+                       queueing::Discipline::FCFS,
+                       kQueueName);
 
     CustomerRequest insert_into_queue = [&queue] (const std::shared_ptr<Customer> & customer) {
         queue.accept_customer(customer);
@@ -75,6 +78,6 @@ void run_project_1(const float lambda,
         std::cout << "K: " << max_queue_customers << std::endl;
         std::cout << "C: " << customers_to_serve << std::endl;
         std::cout << "Master Clock Value: " << timer.time() << std::endl;
-        spy.print_stats();
+        spy.print_proj1_stats();
     }
 }

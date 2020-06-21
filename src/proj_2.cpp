@@ -41,7 +41,7 @@ void run_project_2(float lambda,
                    Discipline discipline,
                    const int runs)
 {
-    std::vector<float> customer_loss_rates;
+    std::unordered_map<std::string, std::vector<float>> customer_loss_rates;
     std::vector<float> waiting_times; // TODO: (will need to split this up by priority)
     std::vector<float> system_times;
     for (auto i = 0; i < runs; ++i) {
@@ -57,7 +57,9 @@ void run_project_2(float lambda,
                                discipline,
                                i*constants::SEED_OFFSET);
 
-        customer_loss_rates.push_back(stat.customer_loss_rate());
+        for (const auto name_and_clr : stat.customer_loss_rates()) {
+            customer_loss_rates[name_and_clr.first].push_back(name_and_clr.second);
+        }
         waiting_times.push_back(stat.average_waiting_time());
         system_times.push_back(stat.average_system_time());
 
@@ -67,9 +69,13 @@ void run_project_2(float lambda,
     }
 
     if (constants::PRINT_STATS) {
-        std::cout << "Customer Loss Rate: "
-                  << statistics::confidence_interval_string(customer_loss_rates)
-                  << std::endl;
+        std::cout << std::endl << "Customer Loss Rates:" << std::endl;
+        for (const auto & name_and_clr_vector : customer_loss_rates) {
+            std::cout << name_and_clr_vector.first << ": "
+                      << statistics::confidence_interval_string(name_and_clr_vector.second)
+                      << std::endl;
+        }
+        std::cout << std::endl;
 
         std::cout << "Waiting Time: "
                   << statistics::confidence_interval_string(waiting_times)
@@ -120,7 +126,12 @@ SimulationRunStats do_m_m_1_k(float lambda,
 
     constexpr std::size_t stats_index = 0; // used for project 1
     constexpr auto kTransientPeriod = 1000;
-    auto spy = SimulationSpy(stats_index, max_cpu_queue_customers + 1, kTransientPeriod);
+
+    const std::string kQueueName = "Queue";
+    auto spy = SimulationSpy(stats_index,
+                             max_cpu_queue_customers + 1,
+                             {kQueueName},
+                             kTransientPeriod);
 
     auto exit_customer = [&spy] (const std::shared_ptr<Customer> & customer) {
         spy.on_customer_exiting(customer);
@@ -134,7 +145,8 @@ SimulationRunStats do_m_m_1_k(float lambda,
                        exit_customer,
                        ExponentialGenerator(kMu, service_seed),
                        [&timer]{ return timer.time(); },
-                       to_discipline(discipline));
+                       to_discipline(discipline),
+                       kQueueName);
 
     CustomerRequest insert_into_queue = [&queue] (const std::shared_ptr<Customer> & customer) {
         queue.accept_customer(customer);
@@ -162,7 +174,7 @@ SimulationRunStats do_m_m_1_k(float lambda,
         timer.advance_time();
     }
 
-    return SimulationRunStats(spy.customer_loss_rate(),
+    return SimulationRunStats(spy.customer_loss_rates(),
                               spy.average_waiting_time(),
                               spy.average_system_time());
 }
@@ -185,9 +197,19 @@ SimulationRunStats do_web_server(float lambda,
 
     SimulationTimer timer;
 
+    const std::string kCpuQueueName = "CPU_QUEUE";
+    const std::string kIoQueueName1 = "IO_QUEUE1";
+    const std::string kIoQueueName2 = "IO_QUEUE2";
+    const std::string kIoQueueName3 = "IO_QUEUE3";
+
     constexpr std::size_t stats_index = 0; // used for project 1
     constexpr auto kTransientPeriod = 1000;
-    auto spy = SimulationSpy(stats_index, max_cpu_queue_customers + 1, kTransientPeriod);
+    auto spy = SimulationSpy(stats_index,
+                             max_cpu_queue_customers 
+                             + 3*max_io_queue_customers
+                             + 4,
+                             {kCpuQueueName, kIoQueueName1, kIoQueueName2, kIoQueueName3},
+                             kTransientPeriod);
 
     auto exit_customer = [&spy] (const std::shared_ptr<Customer> & customer) {
         spy.on_customer_exiting(customer);
@@ -202,25 +224,25 @@ SimulationRunStats do_web_server(float lambda,
                            ExponentialGenerator(kCpuMu, cpu_service_seed),
                            [&timer]{ return timer.time(); },
                            to_discipline(discipline),
-                           "CPU_QUEUE");
+                           kCpuQueueName);
     auto io_queue_1 = Queue(max_io_queue_customers,
                             exit_customer,
                             ExponentialGenerator(kIoMu, io_service_seed_1),
                             [&timer]{ return timer.time(); },
                             to_discipline(discipline),
-                            "IO_QUEUE1");
+                            kIoQueueName1);
     auto io_queue_2 = Queue(max_io_queue_customers,
                             exit_customer,
                             ExponentialGenerator(kIoMu, io_service_seed_2),
                             [&timer]{ return timer.time(); },
                             to_discipline(discipline),
-                            "IO_QUEUE2");
+                            kIoQueueName2);
     auto io_queue_3 = Queue(max_io_queue_customers,
                             exit_customer,
                             ExponentialGenerator(kIoMu, io_service_seed_3),
                             [&timer]{ return timer.time(); },
                             to_discipline(discipline),
-                            "IO_QUEUE3");
+                            kIoQueueName3);
 
     CustomerRequest insert_into_cpu_queue = [&cpu_queue] (const std::shared_ptr<Customer> & customer) {
         cpu_queue.accept_customer(customer);
@@ -289,7 +311,7 @@ SimulationRunStats do_web_server(float lambda,
         timer.advance_time();
     }
 
-    return SimulationRunStats(spy.customer_loss_rate(),
+    return SimulationRunStats(spy.customer_loss_rates(),
                               spy.average_waiting_time(),
                               spy.average_system_time());
 }

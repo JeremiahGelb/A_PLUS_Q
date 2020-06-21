@@ -142,17 +142,8 @@ void test_customer()
     ASSERT_EQ(first_customer->service_time(), kNewServiceTime, "new service time matches");
 
     auto first_customer_string = first_customer->to_string();
-    const std::string kExpectedString = "1,2,1.234,1,10.5";
+    const std::string kExpectedString = "id: 1 Arrival Time: 2 Service Time: 1.234 Serviced: 1 Derparture Time: 10.5";
     ASSERT_EQ(first_customer_string, kExpectedString, "to string works as expected");
-
-    auto second_customer = make_customer(kExpectedString);
-    ASSERT_EQ(second_customer->id(), kFirstCustomerId, "second_customer id matches");
-    ASSERT_EQ(second_customer->arrival_time(), kFirstCustomerArrivalTime, "second_customer arrival time matches");
-    ASSERT_EQ(second_customer->service_time(), kNewServiceTime, "second_customer service time matches");
-    ASSERT_EQ(second_customer->serviced(), kNewServiced, "second_customer serviced matches");
-    ASSERT_EQ(second_customer->departure_time(), kNewDepartureTime, "second_customer departure time matches");
-
-    ASSERT_EQ(*first_customer, *second_customer, "customer == works");
 }
 
 void test_prng()
@@ -622,6 +613,36 @@ void test_customer_events()
     ASSERT_EQ(customer->waiting_time(queue_name_1), (kExitedQueue - kEnteredQueue), "queue1 is 1");
 
     ASSERT_EQ(customer->waiting_time(server_name), (kExitedServer - kEnteredServer), "server is 3");
+
+    auto customer_string = customer->to_string(true);
+    const std::string kExpectedString = "id: 0 Arrival Time: 0 Service Time: 0 Serviced: 1 Derparture Time: 0"
+                                        "\nENTERED QUEUE queue1 at 1"
+                                        "\nEXITED QUEUE queue1 at 2"
+                                        "\nENTERED QUEUE queue2 at 1"
+                                        "\nEXITED QUEUE queue2 at 2"
+                                        "\nENTERED SERVER server at 2"
+                                        "\nEXITED SERVER server at 5";
+    ASSERT_EQ(customer_string, kExpectedString, "to string works as expected");
+
+    // testing entered and entrances
+    customer->add_event(CustomerEvent(CustomerEventType::ENTERED,
+                                      PlaceType::QUEUE,
+                                      queue_name_1,
+                                      kEnteredQueue));
+    customer->add_event(CustomerEvent(CustomerEventType::EXITED,
+                                      PlaceType::QUEUE,
+                                      queue_name_1,
+                                      kExitedQueue));
+
+    ASSERT_EQ(customer->entered(queue_name_1), true, "It has entered queue1");
+    ASSERT_EQ(customer->entered("Garbage"), false, "It has not entered garbage");
+    ASSERT_EQ(customer->entrances(queue_name_1), std::uint32_t(2), "it entered queue 1 twice");
+
+    customer->add_event(CustomerEvent(CustomerEventType::DROPPED_BY,
+                                      PlaceType::QUEUE,
+                                      queue_name_2,
+                                      kExitedQueue));
+    ASSERT_EQ(customer->dropped_by(), queue_name_2, "was dropped by queue 2");
 }
 
 } // testing

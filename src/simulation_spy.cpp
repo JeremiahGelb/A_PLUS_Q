@@ -3,6 +3,8 @@
 #include "simulation_spy.h"
 #include "constants.h"
 
+// TODO: unit test this class
+
 void SimulationSpy::on_customer_entering(const std::shared_ptr<Customer> & customer)
 {
     if (constants::DEBUG_ENABLED) {
@@ -10,7 +12,7 @@ void SimulationSpy::on_customer_entering(const std::shared_ptr<Customer> & custo
                   << " got " << customer->to_string() 
                   << " old size:" << system_customers_.size() << std::endl;
     }
-    ++entered_customers_;
+    ++system_entered_customers_;
     system_customers_.insert({customer->id(), customer});
 
     if (constants::DEBUG_ENABLED) {
@@ -62,24 +64,37 @@ void SimulationSpy::on_transient_period_elapsed()
                   << " erasing stats!" << std::endl;
     }
 
-    entered_customers_ = 0;
+    system_entered_customers_ = 0;
     serviced_customers_ = 0;
-    lost_customers_ = 0;
-    total_waiting_time_ = 0;
+    system_lost_customers_ = 0;
+    for (const auto & name : place_names_) {
+        waiting_times_by_queue_[name] = 0;
+        unique_customers_by_queue_[name] = 0;
+        losses_by_queue_[name] = 0;
+    }
     total_service_time_ = 0;
 }
 
 void SimulationSpy::save_default_stats(const std::shared_ptr<Customer> & customer)
 {
+    // TODO: consider making one big helper function that returns waiting times, entrances and losses
+    // this will avoid iterating multiple times
+    for (const auto & name : place_names_) {
+        if (customer->entered(name)) {
+            unique_customers_by_queue_.at(name) += 1;
+        }
+    }
     if (customer->serviced()) {
         ++serviced_customers_;
 
-        // only save these stats for serviced customers
-        total_waiting_time_ += customer->total_waiting_time();
+        for (const auto & name : place_names_) {
+            waiting_times_by_queue_.at(name) += customer->waiting_time(name);
+        }
         total_service_time_ += customer->service_time();
         total_system_time_ += customer->system_time();
     } else {
-        ++lost_customers_;
+        losses_by_queue_.at(customer->dropped_by()) += 1;
+        ++system_lost_customers_;
     }
 }
 
@@ -100,19 +115,23 @@ void SimulationSpy::save_additional_stats(const std::shared_ptr<Customer> & cust
     additional_stats_.push_back(ss.str());
 }
 
-float SimulationSpy::customer_loss_rate() const
-{
-    return float(lost_customers_) / entered_customers_;
-}
-
 float SimulationSpy::average_service_time() const
 {
     return total_service_time_ / serviced_customers_;
 }
 
+float SimulationSpy::total_waiting_time() const
+{
+    float total_waiting_time = 0;
+    for (const auto & name : place_names_) {
+        total_waiting_time += waiting_times_by_queue_.at(name);
+    }
+    return total_waiting_time;
+}
+
 float SimulationSpy::average_waiting_time() const
 {
-    return total_waiting_time_ / serviced_customers_;
+    return total_waiting_time() / serviced_customers_;
 }
 
 float SimulationSpy::average_system_time() const
@@ -120,14 +139,25 @@ float SimulationSpy::average_system_time() const
     return total_system_time_ / serviced_customers_;
 }
 
-void SimulationSpy::print_stats() const
+std::unordered_map<std::string, float> SimulationSpy::customer_loss_rates() const
+{
+    std::unordered_map<std::string, float> rates;
+    for (const auto & name_and_unique_customers : unique_customers_by_queue_) {
+        rates[name_and_unique_customers.first] = float(losses_by_queue_.at(name_and_unique_customers.first))
+                                                 / name_and_unique_customers.second;
+    }
+    rates["overall"] = float(system_lost_customers_) / system_entered_customers_;
+    return rates;
+}
+
+void SimulationSpy::print_proj1_stats() const
 {
     std::cout << "CLR = "
-              << lost_customers_
+              << system_lost_customers_
               << "/"
-              << entered_customers_
+              << system_entered_customers_
               << " = "
-              << customer_loss_rate()
+              << float(system_lost_customers_) / system_entered_customers_
               << std::endl;
 
     std::cout << "Average Service Time = "
@@ -139,11 +169,11 @@ void SimulationSpy::print_stats() const
               << std::endl;
 
     std::cout << average_waiting_time()
-              << total_waiting_time_
+              << total_waiting_time()
               << "/"
               << serviced_customers_
               << " = "
-              << total_waiting_time_ / serviced_customers_
+              << total_waiting_time() / serviced_customers_
               << std::endl;
 
     for (const auto & stat : additional_stats_) {
