@@ -28,7 +28,6 @@ void run_project_2(float lambda,
                    Discipline discipline,
                    const int runs);
 
-
 SimulationRunStats do_one_run(float lambda,
                               std::size_t max_cpu_queue_customers,
                               std::size_t max_io_queue_customers,
@@ -50,5 +49,4 @@ SimulationRunStats do_web_server(float lambda,
                                  Discipline discipline,
                                  long seed_offset);
 
-
-}
+} // project2

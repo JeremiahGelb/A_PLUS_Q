@@ -40,7 +40,7 @@ private:
         ++id_;
 
         if (constants::DEBUG_ENABLED) {
-            std::cout << "IncomingCustomers::" << __func__ 
+            std::cout << "IncomingCustomers::" << __func__
                       << " called at time: " << simulation_timer_.time()
                       <<  " scheduling delivery of: " << customer->to_string()
                       << " for time: " << arrival_time << std::endl;
@@ -51,7 +51,7 @@ private:
             [this, customer] {
 
                 if (constants::DEBUG_ENABLED) {
-                    std::cout << "IncomingCustomers::" << __func__ 
+                    std::cout << "IncomingCustomers::" << __func__
                               <<  " delivering customer: " << customer->to_string()
                               << " at time: " << simulation_timer_.time() << std::endl;
                 }

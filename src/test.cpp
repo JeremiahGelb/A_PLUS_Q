@@ -47,14 +47,14 @@ void run_all_tests()
         } catch (std::exception & e) {
             ++unhandled_exception_count;
             std::cout << red <<  "Caught unhandled exception in test: " << def <<  test.first << std::endl;
-            std::cout << "explanation: " << e.what() << std::endl;           
+            std::cout << "explanation: " << e.what() << std::endl;
         }
     }
 
     constexpr auto kExpectedFailures = 0;
     constexpr auto kExpectedUnhandledExceptions = 0;
 
-    if (failure_count == kExpectedFailures 
+    if (failure_count == kExpectedFailures
         && unhandled_exception_count == kExpectedUnhandledExceptions) {
         std::cout << std::endl << green << "Overall Pass!" << def << std::endl;
     } else {
@@ -163,7 +163,7 @@ void test_prng()
 
     auto first_seeded_float = seeded_exp_gen.generate();
     auto second_seeded_float = same_seeded_exp_gen.generate();
-    
+
     ASSERT_NEQ(first_default_float, second_default_float,
                "sequantial generations shouldn't be equal");
 
@@ -248,7 +248,7 @@ void test_fcfs_queue()
 
     CustomerRequest insert = [&queue] (const std::shared_ptr<Customer> & customer) {
         queue.accept_customer(customer);
-    };           
+    };
 
     std::vector<std::shared_ptr<Customer>> received_customers;
 
@@ -310,7 +310,7 @@ void test_fcfs_queue()
     for(std::size_t i = 0; i < kMaxSize; i++) {
         insert(make_customer(0, 1.1));
     }
-    
+
     ASSERT_EQ(rejected_customers.size(), std::size_t(0), "no rejected customers");
     ASSERT_EQ(queue.size(), kMaxSize, "queue is at max");
     insert(make_customer(0, 1.1));
@@ -339,7 +339,7 @@ void test_lcfs_queue()
 
     CustomerRequest insert = [&queue] (const std::shared_ptr<Customer> & customer) {
         queue.accept_customer(customer);
-    };           
+    };
 
     std::vector<std::shared_ptr<Customer>> received_customers;
 
@@ -401,7 +401,7 @@ void test_lcfs_queue()
     for(std::size_t i = 0; i < kMaxSize; i++) {
         insert(make_customer(0, 1.1));
     }
-    
+
     ASSERT_EQ(rejected_customers.size(), std::size_t(0), "no rejected customers");
     ASSERT_EQ(queue.size(), kMaxSize, "queue is at max");
     insert(make_customer(0, 1.1));
@@ -430,7 +430,7 @@ void test_sjf_queue()
 
     CustomerRequest insert = [&queue] (const std::shared_ptr<Customer> & customer) {
         queue.accept_customer(customer);
-    };           
+    };
 
     std::vector<std::shared_ptr<Customer>> received_customers;
 
@@ -495,7 +495,7 @@ void test_sjf_queue()
     for(std::size_t i = 0; i < kMaxSize; i++) {
         insert(make_customer(0, 1.1));
     }
-    
+
     ASSERT_EQ(rejected_customers.size(), std::size_t(0), "no rejected customers");
     ASSERT_EQ(queue.size(), kMaxSize, "queue is at max");
     insert(make_customer(0, 1.1));
@@ -560,7 +560,7 @@ void test_random_load_balancer()
     std::vector<RandomLoadBalancerTarget> targets = {std::make_pair(to_list_1, kList1UpperProbability),
                                                      std::make_pair(to_list_2, kList2UpperProbability),
                                                      std::make_pair(to_list_3, kList3UpperProbability)};
-                                                     
+
     auto balancer = RandomLoadBalancer(targets, UniformGenerator());
 
     constexpr auto kCustomers = 100;
@@ -571,7 +571,7 @@ void test_random_load_balancer()
     if (constants::DEBUG_ENABLED) {
         std::cout << customer_list_1.size()
                   << " " << customer_list_2.size()
-                  << " " << customer_list_3.size() 
+                  << " " << customer_list_3.size()
                   << std::endl;
     }
 

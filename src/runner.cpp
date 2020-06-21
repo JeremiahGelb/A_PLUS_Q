@@ -49,7 +49,7 @@ void proj_1(const std::vector<std::string> & args)
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
     std::cout << customers_to_serve  << " customers took "
-              << duration.count() << " milliseconds!" << std::endl; 
+              << duration.count() << " milliseconds!" << std::endl;
 }
 
 void proj_2(const std::vector<std::string> & args)
@@ -137,7 +137,7 @@ void proj_2(const std::vector<std::string> & args)
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
     std::cout << kRuns << " runs of "
               << customers_to_serve  << " customers took "
-              << duration.count() << " milliseconds!" << std::endl; 
+              << duration.count() << " milliseconds!" << std::endl;
 }
 
 int main(int argc, char ** argv) {
@@ -184,6 +184,6 @@ int main(int argc, char ** argv) {
     } else {
         print_help_text();
     }
- 
+
     return 0;
 }

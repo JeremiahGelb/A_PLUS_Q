@@ -40,7 +40,7 @@ public:
     inline std::uint32_t register_job(float start_time, const std::function<void()> & callback) const
     {
         if (constants::DEBUG_ENABLED) {
-            std::cout << "SimulationTimer::" << __func__ 
+            std::cout << "SimulationTimer::" << __func__
                       << " registered job with start time: " << start_time
                       << " and id: " << last_job_id_
                       << " at time: " << time_ << std::endl;
@@ -55,7 +55,7 @@ public:
             if (jobs_iterator->second.id() == id) {
                 jobs_.erase(jobs_iterator);
                 if (constants::DEBUG_ENABLED) {
-                    std::cout << "SimulationTimer::" << __func__ 
+                    std::cout << "SimulationTimer::" << __func__
                             << " erased job: " << id << std::endl;
                 }
                 return;

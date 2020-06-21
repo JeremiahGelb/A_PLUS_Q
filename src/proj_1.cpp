@@ -50,7 +50,7 @@ void run_project_1(const float lambda,
     CustomerRequest insert_into_queue = [&queue] (const std::shared_ptr<Customer> & customer) {
         queue.accept_customer(customer);
     };
-    
+
     CustomerRequest insert_into_spy = [&spy] (const std::shared_ptr<Customer> & customer) {
         spy.on_customer_entering(customer);
     };

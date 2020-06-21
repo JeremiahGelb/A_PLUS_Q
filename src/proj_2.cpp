@@ -151,7 +151,7 @@ SimulationRunStats do_m_m_1_k(float lambda,
     CustomerRequest insert_into_queue = [&queue] (const std::shared_ptr<Customer> & customer) {
         queue.accept_customer(customer);
     };
-    
+
     CustomerRequest insert_into_spy = [&spy] (const std::shared_ptr<Customer> & customer) {
         spy.on_customer_entering(customer);
     };
@@ -205,7 +205,7 @@ SimulationRunStats do_web_server(float lambda,
     constexpr std::size_t stats_index = 0; // used for project 1
     constexpr auto kTransientPeriod = 1000;
     auto spy = SimulationSpy(stats_index,
-                             max_cpu_queue_customers 
+                             max_cpu_queue_customers
                              + 3*max_io_queue_customers
                              + 4,
                              {kCpuQueueName, kIoQueueName1, kIoQueueName2, kIoQueueName3},
@@ -259,7 +259,7 @@ SimulationRunStats do_web_server(float lambda,
     CustomerRequest insert_into_io_queue_3 = [&io_queue_3] (const std::shared_ptr<Customer> & customer) {
         io_queue_3.accept_customer(customer);
     };
-    
+
     CustomerRequest insert_into_spy = [&spy] (const std::shared_ptr<Customer> & customer) {
         spy.on_customer_entering(customer);
     };
@@ -289,7 +289,7 @@ SimulationRunStats do_web_server(float lambda,
                                                      std::make_pair(insert_into_io_queue_2, kIoQueue2Upper),
                                                      std::make_pair(insert_into_io_queue_3, kIoQueue3Upper),
                                                      std::make_pair(exit_customer, kExitServicedUpper)};
-                                                     
+
     auto balancer = RandomLoadBalancer(targets, UniformGenerator(load_balancer_seed));
     CustomerRequest send_to_balancer = [&balancer] (const std::shared_ptr<Customer> & customer) {
         balancer.route_customer(customer);

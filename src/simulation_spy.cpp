@@ -8,15 +8,15 @@
 void SimulationSpy::on_customer_entering(const std::shared_ptr<Customer> & customer)
 {
     if (constants::DEBUG_ENABLED) {
-        std::cout << "SimulationSpy::" << __func__ 
-                  << " got " << customer->to_string() 
+        std::cout << "SimulationSpy::" << __func__
+                  << " got " << customer->to_string()
                   << " old size:" << system_customers_.size() << std::endl;
     }
     ++system_entered_customers_;
     system_customers_.insert({customer->id(), customer});
 
     if (constants::DEBUG_ENABLED) {
-        std::cout << "SimulationSpy::" << __func__ 
+        std::cout << "SimulationSpy::" << __func__
                   << " exited with new size:" << system_customers_.size() << std::endl;
     }
 
@@ -25,7 +25,7 @@ void SimulationSpy::on_customer_entering(const std::shared_ptr<Customer> & custo
 void SimulationSpy::on_customer_exiting(const std::shared_ptr<Customer> & customer)
 {
     if (constants::DEBUG_ENABLED) {
-        std::cout << "SimulationSpy::" << __func__ 
+        std::cout << "SimulationSpy::" << __func__
                   << " erasing " << customer->to_string()
                   << " old size: " << system_customers_.size() << std::endl;
     }
@@ -52,7 +52,7 @@ void SimulationSpy::on_customer_exiting(const std::shared_ptr<Customer> & custom
     }
 
     if (constants::DEBUG_ENABLED) {
-        std::cout << "SimulationSpy::" << __func__ 
+        std::cout << "SimulationSpy::" << __func__
                   << " exited with new size:" << system_customers_.size() << std::endl;
     }
 }
@@ -60,7 +60,7 @@ void SimulationSpy::on_customer_exiting(const std::shared_ptr<Customer> & custom
 void SimulationSpy::on_transient_period_elapsed()
 {
     if (constants::DEBUG_ENABLED) {
-        std::cout << "SimulationSpy::" << __func__ 
+        std::cout << "SimulationSpy::" << __func__
                   << " erasing stats!" << std::endl;
     }
 

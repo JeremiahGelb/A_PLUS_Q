@@ -40,7 +40,7 @@ public:
     {
         return customers_.size();
     }
-    
+
     void accept_customer(const std::shared_ptr<Customer> & customer)
     {
 
@@ -123,8 +123,8 @@ private:
     void handle_requests()
     {
         if (constants::DEBUG_ENABLED) {
-            std::cout << name_ << "::" << __func__ << " entered with: " 
-                      << customers_.size() << " customers and " 
+            std::cout << name_ << "::" << __func__ << " entered with: "
+                      << customers_.size() << " customers and "
                       << requests_.size() << " requests" << std::endl;
         }
 
@@ -133,7 +133,7 @@ private:
             auto customer_iterator = get_customer_iterator();
 
             if (constants::DEBUG_ENABLED) {
-                std::cout << name_ << "::" << __func__ 
+                std::cout << name_ << "::" << __func__
                           << " delivering_customer: " << (*customer_iterator)->to_string() << std::endl;
             }
 
@@ -149,8 +149,8 @@ private:
         }
 
         if (constants::DEBUG_ENABLED) {
-            std::cout << name_ << "::" << __func__ << " exited with: " 
-                    << customers_.size() << " customers and " 
+            std::cout << name_ << "::" << __func__ << " exited with: "
+                    << customers_.size() << " customers and "
                     << requests_.size() << " requests" << std::endl;
         }
     }
