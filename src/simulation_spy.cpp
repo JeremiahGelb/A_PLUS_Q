@@ -64,26 +64,23 @@ void SimulationSpy::on_transient_period_elapsed()
                   << " erasing stats!" << std::endl;
     }
 
-    system_entered_customers_ = 0;
-    serviced_customers_ = 0;
-    system_lost_customers_ = 0;
-    for (const auto & name : place_names_) {
-        waiting_times_by_queue_[name] = 0;
-        unique_customers_by_queue_[name] = 0;
-        losses_by_queue_[name] = 0;
-    }
-    total_service_time_ = 0;
+    clear_stats();
 }
 
 void SimulationSpy::save_default_stats(const std::shared_ptr<Customer> & customer)
 {
-    // TODO: consider making one big helper function that returns waiting times, entrances and losses
+    // TODO: consider making one big helper function (on customer)
+    // that returns waiting times, entrances and losses
     // this will avoid iterating multiple times
+
     for (const auto & name : place_names_) {
-        if (customer->entered(name)) {
+        auto entrances = customer->entrances(name);
+        total_entrances_by_queue_[name] += entrances;
+        if (entrances > 0) {
             unique_customers_by_queue_.at(name) += 1;
         }
     }
+
     if (customer->serviced()) {
         ++serviced_customers_;
 
@@ -120,20 +117,6 @@ float SimulationSpy::average_service_time() const
     return total_service_time_ / serviced_customers_;
 }
 
-float SimulationSpy::total_waiting_time() const
-{
-    float total_waiting_time = 0;
-    for (const auto & name : place_names_) {
-        total_waiting_time += waiting_times_by_queue_.at(name);
-    }
-    return total_waiting_time;
-}
-
-float SimulationSpy::average_waiting_time() const
-{
-    return total_waiting_time() / serviced_customers_;
-}
-
 float SimulationSpy::average_system_time() const
 {
     return total_system_time_ / serviced_customers_;
@@ -148,6 +131,25 @@ std::unordered_map<std::string, float> SimulationSpy::customer_loss_rates() cons
     }
     rates["overall"] = float(system_lost_customers_) / system_entered_customers_;
     return rates;
+}
+
+std::unordered_map<std::string, float> SimulationSpy::average_waiting_times() const
+{
+    // pending response from TA this might have to be unique entrances
+    float total_waiting_time = 0;
+    std::uint32_t total_entrances = 0;
+    std::unordered_map<std::string, float> average_times;
+    for (const auto & name_and_total_entrances : total_entrances_by_queue_) {
+        const auto & name = name_and_total_entrances.first;
+        const auto waiting_time = waiting_times_by_queue_.at(name);
+        const auto entrances = name_and_total_entrances.second;
+
+        average_times[name] = waiting_time / entrances;
+        total_waiting_time += waiting_time;
+        total_entrances += entrances;
+    }
+    average_times["overall"] = total_waiting_time / total_entrances;
+    return average_times;
 }
 
 void SimulationSpy::print_proj1_stats() const
@@ -168,12 +170,8 @@ void SimulationSpy::print_proj1_stats() const
               << average_service_time()
               << std::endl;
 
-    std::cout << average_waiting_time()
-              << total_waiting_time()
-              << "/"
-              << serviced_customers_
-              << " = "
-              << total_waiting_time() / serviced_customers_
+    std::cout << "Average Waiting Time: "
+              << average_waiting_times().at("overall")
               << std::endl;
 
     for (const auto & stat : additional_stats_) {

@@ -28,12 +28,7 @@ public:
         // (for project 1 it will be 101 I think). I'd rather just reserve the memory
         // upfront and not worry about rehashing
         system_customers_.reserve(maximum_system_customers);
-
-        for (const auto & name : place_names_) {
-            waiting_times_by_queue_[name] = 0;
-            unique_customers_by_queue_[name] = 0;
-            losses_by_queue_[name] = 0;
-        }
+        clear_stats();
     }
 
     std::uint32_t serviced_customers()
@@ -46,7 +41,7 @@ public:
 
     std::unordered_map<std::string, float> customer_loss_rates() const;
     float average_service_time() const;
-    float average_waiting_time() const;
+    std::unordered_map<std::string, float> average_waiting_times() const;
     float average_system_time() const;
     void print_proj1_stats() const;
 
@@ -54,7 +49,21 @@ private:
     void save_default_stats(const std::shared_ptr<Customer> & customer);
     void save_additional_stats(const std::shared_ptr<Customer> & customer);
     void on_transient_period_elapsed();
-    float total_waiting_time() const;
+
+    void clear_stats()
+    {
+        system_entered_customers_ = 0;
+        serviced_customers_ = 0;
+        system_lost_customers_ = 0;
+        total_service_time_ = 0;
+        total_system_time_ = 0;
+        for (const auto & name : place_names_) {
+            waiting_times_by_queue_[name] = 0;
+            total_entrances_by_queue_[name] = 0;
+            unique_customers_by_queue_[name] = 0;
+            losses_by_queue_[name] = 0;
+        }
+    }
 
     std::size_t L_;
     std::uint32_t transient_period_;
@@ -64,6 +73,7 @@ private:
 
     // stats that must be cleared
     std::unordered_map<std::string, float> waiting_times_by_queue_;
+    std::unordered_map<std::string, std::uint32_t> total_entrances_by_queue_;
     std::unordered_map<std::string, std::uint32_t> unique_customers_by_queue_;
     std::unordered_map<std::string, std::uint32_t> losses_by_queue_;
     std::uint32_t system_entered_customers_;

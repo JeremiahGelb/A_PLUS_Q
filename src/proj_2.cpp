@@ -41,8 +41,8 @@ void run_project_2(float lambda,
                    Discipline discipline,
                    const int runs)
 {
-    std::unordered_map<std::string, std::vector<float>> customer_loss_rates;
-    std::vector<float> waiting_times; // TODO: (will need to split this up by priority)
+    std::unordered_map<std::string, std::vector<float>> customer_loss_rates; // TODO: (will need to split this up by priority)
+    std::unordered_map<std::string, std::vector<float>> average_waiting_times; // TODO: (will need to split this up by priority)
     std::vector<float> system_times;
     for (auto i = 0; i < runs; ++i) {
         if (constants::PRINT_STATS) {
@@ -60,7 +60,11 @@ void run_project_2(float lambda,
         for (const auto name_and_clr : stat.customer_loss_rates()) {
             customer_loss_rates[name_and_clr.first].push_back(name_and_clr.second);
         }
-        waiting_times.push_back(stat.average_waiting_time());
+
+        for (const auto name_and_time : stat.average_waiting_times()) {
+            average_waiting_times[name_and_time.first].push_back(name_and_time.second);
+        }
+
         system_times.push_back(stat.average_system_time());
 
         if (constants::PRINT_STATS) {
@@ -77,9 +81,13 @@ void run_project_2(float lambda,
         }
         std::cout << std::endl;
 
-        std::cout << "Waiting Time: "
-                  << statistics::confidence_interval_string(waiting_times)
-                  << std::endl;
+        std::cout << std::endl << "Waiting Times: " << std::endl;
+        for (const auto & name_and_time_vector : average_waiting_times) {
+            std::cout << name_and_time_vector.first << ": "
+                      << statistics::confidence_interval_string(name_and_time_vector.second)
+                      << std::endl;
+        }
+        std::cout << std::endl;
 
         std::cout << "System Time "
                   << statistics::confidence_interval_string(system_times)
@@ -175,7 +183,7 @@ SimulationRunStats do_m_m_1_k(float lambda,
     }
 
     return SimulationRunStats(spy.customer_loss_rates(),
-                              spy.average_waiting_time(),
+                              spy.average_waiting_times(),
                               spy.average_system_time());
 }
 
@@ -312,7 +320,7 @@ SimulationRunStats do_web_server(float lambda,
     }
 
     return SimulationRunStats(spy.customer_loss_rates(),
-                              spy.average_waiting_time(),
+                              spy.average_waiting_times(),
                               spy.average_system_time());
 }
 

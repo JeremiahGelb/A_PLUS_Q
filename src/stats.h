@@ -7,10 +7,10 @@
 class SimulationRunStats {
 public:
     SimulationRunStats(const std::unordered_map<std::string, float> & customer_loss_rates,
-                       float average_waiting_time,
+                       const std::unordered_map<std::string, float> & average_waiting_times,
                        float average_system_time)
     : customer_loss_rates_(customer_loss_rates)
-    , average_waiting_time_(average_waiting_time)
+    , average_waiting_times_(average_waiting_times)
     , average_system_time_(average_system_time)
     {}
 
@@ -19,9 +19,9 @@ public:
         return customer_loss_rates_;
     }
 
-    float average_waiting_time()
+    std::unordered_map<std::string, float> average_waiting_times()
     {
-        return average_waiting_time_;
+        return average_waiting_times_;
     }
 
     float average_system_time()
@@ -31,7 +31,7 @@ public:
 
 private:
     std::unordered_map<std::string, float> customer_loss_rates_;
-    float average_waiting_time_; // TODO: (will have to revamp for multi queue)
+    std::unordered_map<std::string, float> average_waiting_times_;
     float average_system_time_;
 };
 
