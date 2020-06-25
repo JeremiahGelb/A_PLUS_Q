@@ -55,7 +55,7 @@ private:
         system_entered_customers_ = 0;
         serviced_customers_ = 0;
         system_lost_customers_ = 0;
-        total_service_time_ = 0;
+        total_service_time_ = 0; // TODO: this isn't right for cpu example
         total_system_time_ = 0;
         for (const auto & name : place_names_) {
             waiting_times_by_queue_[name] = 0;
