@@ -116,15 +116,17 @@ void test_customer()
 {
     constexpr std::uint32_t kFirstCustomerId = 1;
     constexpr float kFirstCustomerArrivalTime = 2.0;
+    constexpr std::uint32_t kPriority = 999;
 
     constexpr auto kDefaultServiced = false;
     constexpr float kDefaultServiceTime = 0;
     constexpr float kDefaultDepartureTime = 0;
 
-    auto first_customer = make_customer(kFirstCustomerId, kFirstCustomerArrivalTime);
+    auto first_customer = make_customer(kFirstCustomerId, kFirstCustomerArrivalTime, kPriority);
 
     ASSERT_EQ(first_customer->id(), kFirstCustomerId, "initial id matches");
     ASSERT_EQ(first_customer->arrival_time(), kFirstCustomerArrivalTime, "initial arrival time matches");
+    ASSERT_EQ(first_customer->priority(), kPriority, "priority matches");
     ASSERT_EQ(first_customer->service_time(), kDefaultServiceTime, "initial service time matches");
     ASSERT_EQ(first_customer->serviced(), kDefaultServiced, "initial serviced matches");
     ASSERT_EQ(first_customer->departure_time(), kDefaultDepartureTime, "initial departure time matches");

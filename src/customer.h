@@ -74,11 +74,13 @@ class Customer {
 public:
     Customer(std::uint32_t id,
              float arrival_time,
+             std::uint32_t priority,
              float service_time,
              bool serviced,
              float departure_time)
     : id_(id)
     , arrival_time_(arrival_time)
+    , priority_(priority)
     , service_time_(service_time)
     , serviced_(serviced)
     , departure_time_(departure_time)
@@ -110,6 +112,11 @@ public:
     std::uint32_t id() const
     {
         return id_;
+    }
+
+    std::uint32_t priority() const
+    {
+        return priority_;
     }
 
     float arrival_time() const
@@ -244,6 +251,7 @@ public:
 private:
     std::uint32_t id_; // unique id for debug purposes
     float arrival_time_; // time they enter system
+    std::uint32_t priority_;
     float service_time_; // time their next job will take
     bool serviced_; // was request fulfilled
     float departure_time_;
@@ -262,9 +270,10 @@ inline bool operator==(const Customer & lhs, const Customer & rhs)
 }
 
 inline std::shared_ptr<Customer> make_customer(std::uint32_t id,
-                                               float arrrival_time)
+                                               float arrrival_time,
+                                               std::uint32_t priority = 0)
 {
-    return std::make_shared<Customer>(id, arrrival_time, 0.0, false, 0.0);
+    return std::make_shared<Customer>(id, arrrival_time, priority, 0.0, false, 0.0);
 }
 
 using CustomerRequest = std::function<void(const std::shared_ptr<Customer> &)>;
