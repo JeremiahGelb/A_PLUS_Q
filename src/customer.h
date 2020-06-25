@@ -93,6 +93,8 @@ public:
            << id_
            << " Arrival Time: "
            << arrival_time_
+           << " Priority: "
+           << priority_
            << " Service Time: "
            << service_time_
            << " Serviced: "
