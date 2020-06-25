@@ -144,7 +144,7 @@ void test_customer()
     ASSERT_EQ(first_customer->service_time(), kNewServiceTime, "new service time matches");
 
     auto first_customer_string = first_customer->to_string();
-    const std::string kExpectedString = "id: 1 Arrival Time: 2 Service Time: 1.234 Serviced: 1 Derparture Time: 10.5";
+    const std::string kExpectedString = "id: 1 Arrival Time: 2 Service Time: 1.234 Serviced: 1 Departure Time: 10.5";
     ASSERT_EQ(first_customer_string, kExpectedString, "to string works as expected");
 }
 
@@ -617,7 +617,7 @@ void test_customer_events()
     ASSERT_EQ(customer->waiting_time(server_name), (kExitedServer - kEnteredServer), "server is 3");
 
     auto customer_string = customer->to_string(true);
-    const std::string kExpectedString = "id: 0 Arrival Time: 0 Service Time: 0 Serviced: 1 Derparture Time: 0"
+    const std::string kExpectedString = "id: 0 Arrival Time: 0 Service Time: 0 Serviced: 1 Departure Time: 0"
                                         "\nENTERED QUEUE queue1 at 1"
                                         "\nEXITED QUEUE queue1 at 2"
                                         "\nENTERED QUEUE queue2 at 1"

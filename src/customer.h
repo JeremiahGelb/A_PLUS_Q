@@ -97,7 +97,7 @@ public:
            << service_time_
            << " Serviced: "
            << serviced_
-           << " Derparture Time: "
+           << " Departure Time: "
            << departure_time_;
 
         if (verbose) {
