@@ -3,6 +3,7 @@
 #include "simulation_timer.h"
 #include "prng.h"
 #include "customer.h"
+#include "priority_generator.h"
 #include "constants.h"
 
 namespace {
@@ -11,13 +12,15 @@ namespace {
 
 } // anonymous
 
-template <class ArrivalTimeGenerator>
+template <class ArrivalTimeGenerator, class PriorityGenerator = ConstantPriorityGenerator>
 class IncomingCustomers {
 public:
     IncomingCustomers(const SimulationTimer & simulation_timer,
-                      const ArrivalTimeGenerator & arrival_time_generator)
+                      const ArrivalTimeGenerator & arrival_time_generator,
+                      const PriorityGenerator & priority_generator = ConstantPriorityGenerator())
     : simulation_timer_(simulation_timer)
     , arrival_time_generator_(arrival_time_generator)
+    , priority_generator_(priority_generator)
     {}
 
     void register_for_customers(const CustomerRequest & callback)
@@ -34,7 +37,7 @@ private:
     void generate_customer()
     {
         auto arrival_time = last_arrival_time_ + arrival_time_generator_.generate();
-        auto customer = make_customer(id_, arrival_time);
+        auto customer = make_customer(id_, arrival_time, priority_generator_.generate());
 
         last_arrival_time_ = arrival_time;
         ++id_;
@@ -68,6 +71,7 @@ private:
     std::vector<CustomerRequest> customer_destinations_;
     const SimulationTimer & simulation_timer_;
     ArrivalTimeGenerator arrival_time_generator_;
+    PriorityGenerator priority_generator_;
     std::uint32_t id_ = 0;
     float last_arrival_time_ = 0;
 };

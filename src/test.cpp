@@ -3,6 +3,7 @@
 #include <utility>
 #include <string>
 #include <iostream>
+#include <unordered_map>
 
 #include "test.h"
 #include "simulation_timer.h"
@@ -12,6 +13,7 @@
 #include "queue.h"
 #include "server.h"
 #include "random_load_balancer.h"
+#include "priority_generator.h"
 
 namespace testing {
 
@@ -30,7 +32,8 @@ void run_all_tests()
         std::make_pair("sjf_queue", test_sjf_queue),
         std::make_pair("Server", test_server),
         std::make_pair("Random Load Balancer", test_random_load_balancer),
-        std::make_pair("Customer events", test_customer_events)
+        std::make_pair("Customer events", test_customer_events),
+        std::make_pair("Priority Generator", test_priority_generator)
     };
 
     auto failure_count = 0;
@@ -645,6 +648,41 @@ void test_customer_events()
                                       queue_name_2,
                                       kExitedQueue));
     ASSERT_EQ(customer->dropped_by(), queue_name_2, "was dropped by queue 2");
+}
+
+void test_priority_generator()
+{
+    constexpr std::uint32_t kDefaultConstantPriority = 1;
+    auto constant_priority_generator = ConstantPriorityGenerator();
+    ASSERT_EQ(constant_priority_generator.generate(), kDefaultConstantPriority, "constant is default");
+
+
+    constexpr auto kSeed = 0;
+    constexpr std::uint32_t kMin = 1;
+    constexpr std::uint32_t kMax = 4;
+    constexpr std::size_t kPriorities = (kMax - kMin + 1);
+    auto uniform_priority_generator = UniformPriorityGenerator(kMin,
+                                                               kMax,
+                                                               kSeed);
+
+    std::unordered_map<std::uint32_t, int> generated_priorities;
+    constexpr std::uint32_t kRuns = 10000;
+    for (std::uint32_t i = 0; i < kRuns; ++i) {
+        generated_priorities[uniform_priority_generator.generate()]++;
+    }
+
+    ASSERT_EQ(generated_priorities.size(), kPriorities, "generated every priority");
+
+    auto abs = [] (auto i) {
+        return i < 0 ? -i : i;
+    };
+
+    for (std::uint32_t i = kMin; i <= kMax; ++i) {
+        auto count = generated_priorities.at(i);
+        constexpr int kExpectedCount = kRuns / kPriorities;
+        constexpr int kMaxDifference = kExpectedCount / 50; // 2% error
+        ASSERT_LT(abs(count - kExpectedCount), kMaxDifference, "count was close to expected");
+    }
 }
 
 } // testing
