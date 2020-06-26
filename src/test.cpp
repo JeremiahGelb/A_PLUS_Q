@@ -33,7 +33,8 @@ void run_all_tests()
         std::make_pair("Server", test_server),
         std::make_pair("Random Load Balancer", test_random_load_balancer),
         std::make_pair("Customer events", test_customer_events),
-        std::make_pair("Priority Generator", test_priority_generator)
+        std::make_pair("Priority Generator", test_priority_generator),
+        std::make_pair("Priority Non Preempt", test_prio_np_queue)
     };
 
     auto failure_count = 0;
@@ -313,7 +314,7 @@ void test_fcfs_queue()
 
     // testing max size
     ASSERT_EQ(queue.size(), std::size_t(0), "queue empty before testing max");
-    for(std::size_t i = 0; i < kMaxSize; i++) {
+    for (std::size_t i = 0; i < kMaxSize; i++) {
         insert(make_customer(0, 1.1));
     }
 
@@ -404,7 +405,7 @@ void test_lcfs_queue()
 
     // testing max size
     ASSERT_EQ(queue.size(), std::size_t(0), "queue empty before testing max");
-    for(std::size_t i = 0; i < kMaxSize; i++) {
+    for (std::size_t i = 0; i < kMaxSize; i++) {
         insert(make_customer(0, 1.1));
     }
 
@@ -498,7 +499,7 @@ void test_sjf_queue()
 
     // testing max size
     ASSERT_EQ(queue.size(), std::size_t(0), "queue empty before testing max");
-    for(std::size_t i = 0; i < kMaxSize; i++) {
+    for (std::size_t i = 0; i < kMaxSize; i++) {
         insert(make_customer(0, 1.1));
     }
 
@@ -507,6 +508,123 @@ void test_sjf_queue()
     insert(make_customer(0, 1.1));
     ASSERT_EQ(queue.size(), kMaxSize, "queue didn't excede max");
     ASSERT_EQ(rejected_customers.size(), std::size_t(1), "one rejected customer");
+}
+
+void test_prio_np_queue()
+{
+    std::vector<std::shared_ptr<Customer>> rejected_customers;
+    auto exit_customer = [&rejected_customers] (const std::shared_ptr<Customer> & customer) {
+        rejected_customers.push_back(customer);
+    };
+
+    constexpr std::size_t kBadMaxSize = 10;
+    constexpr std::size_t kMaxSize = 12;
+    constexpr float kLambda = 1;
+    constexpr std::uint32_t kMin = 1;
+    constexpr std::uint32_t kMax = 4;
+    constexpr std::uint32_t kPriorities = 4;
+
+    try {
+        auto queue = Queue(kBadMaxSize,
+                           exit_customer,
+                           ExponentialGenerator(kLambda),
+                           []{ return 0; },
+                           queueing::Discipline::PRIO_NP,
+                           "q",
+                           kMin,
+                           kMax);
+        ASSERT(false, "bad size queue should throw");
+    } catch (std::invalid_argument & e) {}
+
+    auto queue = Queue(kMaxSize,
+                       exit_customer,
+                       ExponentialGenerator(kLambda),
+                       []{ return 0; },
+                       queueing::Discipline::PRIO_NP,
+                       "q",
+                       kMin,
+                       kMax);
+
+    ASSERT_EQ(queue.size(), std::size_t(0), "queue empty at start");
+
+    CustomerRequest insert = [&queue] (const std::shared_ptr<Customer> & customer) {
+        queue.accept_customer(customer);
+    };
+
+    std::vector<std::shared_ptr<Customer>> received_customers;
+
+    auto request = [&received_customers] (const std::shared_ptr<Customer> & customer) {
+        received_customers.push_back(customer);
+    };
+
+    // testing basic functionality
+    insert(make_customer(0, 1.1, 1));
+    ASSERT_EQ(queue.size(), std::size_t(1), "queue now has one customer");
+
+    queue.request_one_customer(request);
+    ASSERT_EQ(queue.size(), std::size_t(0), "queue empty again");
+    ASSERT_EQ(received_customers.size(), std::size_t(1), "customer made it to vector");
+
+    queue.request_one_customer(request);
+    queue.request_one_customer(request);
+    insert(make_customer(1, 1.1, 2));
+    ASSERT_EQ(queue.size(), std::size_t(0), "first pending request fulfilled");
+    insert(make_customer(2, 1.1, 2));
+    ASSERT_EQ(queue.size(), std::size_t(0), "second pending request fulfilled");
+    ASSERT_EQ(received_customers.size(), std::size_t(3), "got all those customers");
+
+
+    // testing customers are delivered FIFO PRIO NP
+    received_customers.clear();
+    ASSERT(received_customers.size() == 0, "clear");
+    insert(make_customer(3, 1.1 , 3));
+    insert(make_customer(2, 1.1 , 2));
+    insert(make_customer(0, 1.1, 1));
+    insert(make_customer(1, 1.1, 1));
+    queue.request_one_customer(request);
+    queue.request_one_customer(request);
+    queue.request_one_customer(request);
+    queue.request_one_customer(request);
+    std::uint32_t counter = 0;
+    for (const auto & customer : received_customers) {
+        ASSERT_EQ(customer->id(), counter, "customers are fifo within priority");
+        ASSERT_NEQ(customer->service_time(), float(0.0), "queue sets service time");
+        ++counter;
+    }
+
+    // testing requests are handled FIFO
+    std::vector<int> call_order;
+    auto request_1 = [&call_order] (const std::shared_ptr<Customer> &) {
+        call_order.push_back(0);
+    };
+    auto request_2 = [&call_order] (const std::shared_ptr<Customer> &) {
+        call_order.push_back(1);
+    };
+    queue.request_one_customer(request_1);
+    queue.request_one_customer(request_2);
+    insert(make_customer(0, 1.1, 1));
+    insert(make_customer(1, 1.1, 1));
+    ASSERT_EQ(call_order.size(), std::size_t(2), "both got handled");
+    ASSERT_EQ(call_order[0], 0, "first handled first");
+    ASSERT_EQ(call_order[1], 1, "second handled second");
+
+    // testing max size
+    ASSERT_EQ(queue.size(), std::size_t(0), "queue empty before testing max");
+    for (std::size_t i = 0; i < kMaxSize/kPriorities; i++) {
+        insert(make_customer(0, 1.1, 1));
+        insert(make_customer(0, 1.1, 2));
+        insert(make_customer(0, 1.1, 3));
+        insert(make_customer(0, 1.1, 4));
+    }
+
+    ASSERT_EQ(rejected_customers.size(), std::size_t(0), "no rejected customers");
+    ASSERT_EQ(queue.size(), kMaxSize, "queue is at max");
+    insert(make_customer(0, 1.1, 1));
+    insert(make_customer(0, 1.1, 2));
+    insert(make_customer(0, 1.1, 3));
+    insert(make_customer(0, 1.1, 4));
+    ASSERT_EQ(queue.size(), kMaxSize, "queue didn't excede max");
+    ASSERT_EQ(rejected_customers.size(), std::size_t(4), "four rejected customers");
 }
 
 void test_server()

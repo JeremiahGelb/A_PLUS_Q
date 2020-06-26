@@ -152,6 +152,8 @@ SimulationRunStats do_m_m_1_k(float lambda,
     constexpr auto kMaxPriority = 4;
     auto priority_generator = UniformPriorityGenerator(kMinPriority, kMaxPriority, priority_seed);
 
+    std::uint32_t min_priority = 0;
+    std::uint32_t max_priority = 0;
     switch(discipline) {
     case project2::Discipline::FCFS:
     case project2::Discipline::LCFS_NP :
@@ -161,6 +163,8 @@ SimulationRunStats do_m_m_1_k(float lambda,
     case project2::Discipline::PRIO_NP:
     case project2::Discipline::PRIO_P:
         generate_priority = [&priority_generator] { return priority_generator.generate(); };
+        min_priority = 1;
+        max_priority = 4;
         break;
     }
 
@@ -173,7 +177,9 @@ SimulationRunStats do_m_m_1_k(float lambda,
                        ExponentialGenerator(kMu, service_seed),
                        [&timer]{ return timer.time(); },
                        to_discipline(discipline),
-                       kQueueName);
+                       kQueueName,
+                       min_priority,
+                       max_priority);
 
     CustomerRequest insert_into_queue = [&queue] (const std::shared_ptr<Customer> & customer) {
         queue.accept_customer(customer);

@@ -40,6 +40,9 @@ public:
     , discipline_(discipline)
     , name_(name)
     {
+        if (max_size % (maximum_priority - minimum_priority + 1)) {
+            throw std::invalid_argument("Number of priorities must evenly divide max_size");
+        }
         for (std::uint32_t i = minimum_priority; i <= maximum_priority; ++i) {
             customers_[i] = {};
         }
@@ -101,6 +104,7 @@ public:
             }
             case queueing::Discipline::PRIO_NP:
                 priority_vector.push_back(customer);
+                break;
             case queueing::Discipline::PRIO_P:
                 throw std::runtime_error("TODO: unimplimented");
             }
@@ -129,6 +133,17 @@ private:
         exit_customer_(customer);
     }
 
+
+    std::vector<std::shared_ptr<Customer>> & lowest_non_empty_customer_vector()
+    {
+        for (auto & priority_and_customer_vector : customers_) {
+            if (!priority_and_customer_vector.second.empty()) {
+                return priority_and_customer_vector.second;
+            }
+        }
+        throw(std::runtime_error("lowest non empty called when empty"));
+    }
+
     std::shared_ptr<Customer> return_and_pop_customer()
     {
         switch (discipline_) {
@@ -148,6 +163,12 @@ private:
             return customer;
         }
         case queueing::Discipline::PRIO_NP:
+        {
+            auto & customer_vector = lowest_non_empty_customer_vector();
+            auto customer = customer_vector.front();
+            customer_vector.erase(customer_vector.begin()); // oof the moves
+            return customer;
+        }
         case queueing::Discipline::PRIO_P:
             throw std::runtime_error("TODO: unimplimented");
         }
