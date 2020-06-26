@@ -45,7 +45,7 @@ private:
         if (constants::DEBUG_ENABLED) {
             std::cout << "IncomingCustomers::" << __func__
                       << " called at time: " << simulation_timer_.time()
-                      <<  " scheduling delivery of: " << customer->to_string()
+                      << " scheduling delivery of: " << customer->to_string()
                       << " for time: " << arrival_time << std::endl;
         }
 

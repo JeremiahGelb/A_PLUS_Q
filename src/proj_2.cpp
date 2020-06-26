@@ -156,7 +156,7 @@ SimulationRunStats do_m_m_1_k(float lambda,
     case project2::Discipline::FCFS:
     case project2::Discipline::LCFS_NP :
     case project2::Discipline::SJF_NP:
-        generate_priority = [] { return 1; };
+        generate_priority = [] { return default_customer_priority(); };
         break;
     case project2::Discipline::PRIO_NP:
     case project2::Discipline::PRIO_P:

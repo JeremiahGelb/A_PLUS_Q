@@ -7,6 +7,10 @@
 #include <utility>
 #include <algorithm>
 
+constexpr std::uint32_t default_customer_priority() {
+    return 0;
+}
+
 enum class CustomerEventType {
     ENTERED,
     EXITED,
@@ -273,7 +277,7 @@ inline bool operator==(const Customer & lhs, const Customer & rhs)
 
 inline std::shared_ptr<Customer> make_customer(std::uint32_t id,
                                                float arrrival_time,
-                                               std::uint32_t priority = 0)
+                                               std::uint32_t priority = default_customer_priority())
 {
     return std::make_shared<Customer>(id, arrrival_time, priority, 0.0, false, 0.0);
 }
