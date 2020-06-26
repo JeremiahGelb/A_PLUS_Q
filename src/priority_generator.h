@@ -4,21 +4,6 @@
 
 #include "prng.h"
 
-class ConstantPriorityGenerator {
-public:
-    ConstantPriorityGenerator(std::uint32_t constant = 1)
-    : constant_(constant)
-    {
-    }
-
-    std::uint32_t generate()
-    {
-        return constant_;
-    }
-private:
-    const std::uint32_t constant_;
-};
-
 class UniformPriorityGenerator {
 public:
     UniformPriorityGenerator(std::uint32_t min,

@@ -127,8 +127,9 @@ SimulationRunStats do_m_m_1_k(float lambda,
                               long seed_offset)
 {
     constexpr float kMu = 1.0;
-    long service_seed = 1234 + seed_offset;
-    long arrival_seed = 4321 + seed_offset;
+    long service_seed = 1111 + seed_offset;
+    long arrival_seed = 2222 + seed_offset;
+    long priority_seed = 3333 + seed_offset;
 
     SimulationTimer timer;
 
@@ -145,9 +146,27 @@ SimulationRunStats do_m_m_1_k(float lambda,
         spy.on_customer_exiting(customer);
     };
 
-    auto incoming_customers = IncomingCustomers(timer,
-                                                ExponentialGenerator(lambda, arrival_seed));
 
+    std::function<std::uint32_t()> generate_priority;
+    constexpr auto kMinPriority = 1;
+    constexpr auto kMaxPriority = 4;
+    auto priority_generator = UniformPriorityGenerator(kMinPriority, kMaxPriority, priority_seed);
+
+    switch(discipline) {
+    case project2::Discipline::FCFS:
+    case project2::Discipline::LCFS_NP :
+    case project2::Discipline::SJF_NP:
+        generate_priority = [] { return 1; };
+        break;
+    case project2::Discipline::PRIO_NP:
+    case project2::Discipline::PRIO_P:
+        generate_priority = [&priority_generator] { return priority_generator.generate(); };
+        break;
+    }
+
+    IncomingCustomers incoming_customers(timer,
+                                         ExponentialGenerator(lambda, arrival_seed),
+                                         generate_priority);
 
     auto queue = Queue(max_cpu_queue_customers,
                        exit_customer,

@@ -12,15 +12,15 @@ namespace {
 
 } // anonymous
 
-template <class ArrivalTimeGenerator, class PriorityGenerator = ConstantPriorityGenerator>
+template <class ArrivalTimeGenerator>
 class IncomingCustomers {
 public:
     IncomingCustomers(const SimulationTimer & simulation_timer,
                       const ArrivalTimeGenerator & arrival_time_generator,
-                      const PriorityGenerator & priority_generator = ConstantPriorityGenerator())
+                      const std::function<std::uint32_t()> & generate_priority = [] {return 1;})
     : simulation_timer_(simulation_timer)
     , arrival_time_generator_(arrival_time_generator)
-    , priority_generator_(priority_generator)
+    , generate_priority_(generate_priority)
     {}
 
     void register_for_customers(const CustomerRequest & callback)
@@ -37,7 +37,7 @@ private:
     void generate_customer()
     {
         auto arrival_time = last_arrival_time_ + arrival_time_generator_.generate();
-        auto customer = make_customer(id_, arrival_time, priority_generator_.generate());
+        auto customer = make_customer(id_, arrival_time, generate_priority_());
 
         last_arrival_time_ = arrival_time;
         ++id_;
@@ -71,7 +71,7 @@ private:
     std::vector<CustomerRequest> customer_destinations_;
     const SimulationTimer & simulation_timer_;
     ArrivalTimeGenerator arrival_time_generator_;
-    PriorityGenerator priority_generator_;
+    const std::function<std::uint32_t()> generate_priority_;
     std::uint32_t id_ = 0;
     float last_arrival_time_ = 0;
 };

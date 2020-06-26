@@ -655,11 +655,6 @@ void test_customer_events()
 
 void test_priority_generator()
 {
-    constexpr std::uint32_t kDefaultConstantPriority = 1;
-    auto constant_priority_generator = ConstantPriorityGenerator();
-    ASSERT_EQ(constant_priority_generator.generate(), kDefaultConstantPriority, "constant is default");
-
-
     constexpr auto kSeed = 0;
     constexpr std::uint32_t kMin = 1;
     constexpr std::uint32_t kMax = 4;
