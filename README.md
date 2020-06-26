@@ -1,9 +1,6 @@
 # A_PLUS_Q
 Queuing simulation for ECE 579 
 
-Project 1 -> Simulating Customers => Queue => Server with exponentially distributed service and inter-arrival times
-
-
 ## BUILD
 ```
 make
@@ -15,6 +12,7 @@ make clean
 ```
 
 ## RUN PROJECT 1
+Project 1 -> Simulate FCFS MM1K queue with poisson arrivals
 ```
 ./run.o --proj1 Lambda K C L
 
