@@ -36,6 +36,7 @@ void run_all_tests()
         std::make_pair("Customer events", test_customer_events),
         std::make_pair("Priority Generator", test_priority_generator),
         std::make_pair("Priority Non Preempt", test_prio_np_queue),
+        std::make_pair("Priority Preempt", test_prio_p_queue),
         std::make_pair("Spy", test_spy)
     };
 
@@ -629,17 +630,169 @@ void test_prio_np_queue()
     ASSERT_EQ(rejected_customers.size(), std::size_t(4), "four rejected customers");
 }
 
+void test_prio_p_queue()
+{
+    std::vector<std::shared_ptr<Customer>> rejected_customers;
+    auto exit_customer = [&rejected_customers] (const std::shared_ptr<Customer> & customer) {
+        rejected_customers.push_back(customer);
+    };
+
+    constexpr std::size_t kBadMaxSize = 10;
+    constexpr std::size_t kMaxSize = 12;
+    constexpr float kLambda = 1;
+    constexpr std::uint32_t kMin = 1;
+    constexpr std::uint32_t kMax = 4;
+    constexpr std::uint32_t kPriorities = 4;
+
+    try {
+        auto queue = Queue(kBadMaxSize,
+                           exit_customer,
+                           ExponentialGenerator(kLambda),
+                           []{ return 0; },
+                           queueing::Discipline::PRIO_P,
+                           "q",
+                           kMin,
+                           kMax);
+        ASSERT(false, "bad size queue should throw");
+    } catch (std::invalid_argument & e) {}
+
+    auto queue = Queue(kMaxSize,
+                       exit_customer,
+                       ExponentialGenerator(kLambda),
+                       []{ return 0; },
+                       queueing::Discipline::PRIO_P,
+                       "q",
+                       kMin,
+                       kMax);
+
+    ASSERT_EQ(queue.size(), std::size_t(0), "queue empty at start");
+
+    CustomerRequest insert = [&queue] (const std::shared_ptr<Customer> & customer) {
+        queue.accept_customer(customer);
+    };
+
+    bool swap_enabled = false;
+    std::shared_ptr<Customer> swap_target = make_customer(0,0,1);
+    auto swap_call_count = 0;
+    CustomerSwapFunction swap_if_enabled = [&swap_enabled,
+                                            &swap_target,
+                                            &swap_call_count] (const std::shared_ptr<Customer> & customer) {
+        ++swap_call_count;
+        if (swap_enabled) {
+            auto cached_target = swap_target;
+            swap_target = customer;
+            cached_target->set_service_time(1);
+            return cached_target;
+        } else {
+            return customer;
+        }
+    };
+
+    queue.register_for_preempts(swap_if_enabled);
+
+    std::vector<std::shared_ptr<Customer>> received_customers;
+
+    auto request = [&received_customers] (const std::shared_ptr<Customer> & customer) {
+        received_customers.push_back(customer);
+    };
+
+    // testing basic functionality
+    insert(make_customer(0, 1.1, 1));
+    ASSERT_EQ(queue.size(), std::size_t(1), "queue now has one customer");
+
+    queue.request_one_customer(request);
+    ASSERT_EQ(queue.size(), std::size_t(0), "queue empty again");
+    ASSERT_EQ(received_customers.size(), std::size_t(1), "customer made it to vector");
+
+    queue.request_one_customer(request);
+    queue.request_one_customer(request);
+    insert(make_customer(1, 1.1, 2));
+    ASSERT_EQ(queue.size(), std::size_t(0), "first pending request fulfilled");
+    insert(make_customer(2, 1.1, 2));
+    ASSERT_EQ(queue.size(), std::size_t(0), "second pending request fulfilled");
+    ASSERT_EQ(received_customers.size(), std::size_t(3), "got all those customers");
+
+
+    // testing customers are delivered FIFO PRIO P
+    constexpr std::uint32_t kRejectedId = 1234;
+
+    received_customers.clear();
+    ASSERT(received_customers.size() == 0, "clear");
+    insert(make_customer(3, 1.1 , 3));
+    insert(make_customer(1, 1.1 , 2));
+    insert(make_customer(2, 1.1, 2));
+
+    // third level 2 customer will get kicked when swap happens
+    insert(make_customer(kRejectedId, 1.1, 2));
+    ASSERT_EQ(rejected_customers.size(), std::size_t(0), "no rejected customers 1");
+
+    swap_enabled = true;
+    swap_target = make_customer(0, 1.1, 2);
+    insert(make_customer(999, 1.1, 1));
+    swap_enabled = false;
+
+    ASSERT_EQ(rejected_customers.size(), size_t(1), "Customer booted when preempt comes in");
+    ASSERT_EQ(rejected_customers[0]->id(), kRejectedId, "Customer booted when preempt comes in");
+    rejected_customers.clear();
+
+    queue.request_one_customer(request);
+    queue.request_one_customer(request);
+    queue.request_one_customer(request);
+    queue.request_one_customer(request);
+    std::uint32_t counter = 0;
+    for (const auto & customer : received_customers) {
+        ASSERT_EQ(customer->id(), counter, "customers are fifo within priority");
+        ASSERT_NEQ(customer->service_time(), float(0.0), "queue sets service time");
+        ++counter;
+    }
+
+    // testing requests are handled FIFO
+    std::vector<int> call_order;
+    auto request_1 = [&call_order] (const std::shared_ptr<Customer> &) {
+        call_order.push_back(0);
+    };
+    auto request_2 = [&call_order] (const std::shared_ptr<Customer> &) {
+        call_order.push_back(1);
+    };
+    queue.request_one_customer(request_1);
+    queue.request_one_customer(request_2);
+    insert(make_customer(0, 1.1, 1));
+    insert(make_customer(1, 1.1, 1));
+    ASSERT_EQ(call_order.size(), std::size_t(2), "both got handled");
+    ASSERT_EQ(call_order[0], 0, "first handled first");
+    ASSERT_EQ(call_order[1], 1, "second handled second");
+
+    // testing max size
+    ASSERT_EQ(queue.size(), std::size_t(0), "queue empty before testing max");
+    for (std::size_t i = 0; i < kMaxSize/kPriorities; i++) {
+        insert(make_customer(0, 1.1, 1));
+        insert(make_customer(0, 1.1, 2));
+        insert(make_customer(0, 1.1, 3));
+        insert(make_customer(0, 1.1, 4));
+    }
+
+    ASSERT_EQ(rejected_customers.size(), std::size_t(0), "no rejected customers 2");
+    ASSERT_EQ(queue.size(), kMaxSize, "queue is at max");
+    insert(make_customer(0, 1.1, 1));
+    insert(make_customer(0, 1.1, 2));
+    insert(make_customer(0, 1.1, 3));
+    insert(make_customer(0, 1.1, 4));
+    ASSERT_EQ(queue.size(), kMaxSize, "queue didn't excede max");
+    ASSERT_EQ(rejected_customers.size(), std::size_t(4), "four rejected customers");
+}
+
 void test_server()
 {
     SimulationTimer timer;
 
-    constexpr auto kId = 0;
-    constexpr auto kArrivalTime = 1;
-    constexpr auto kServiceTime = 2;
+    constexpr std::uint32_t kId = 0;
+    constexpr auto kArrivalTime = 1.0;
+    constexpr auto kServiceTime = 2.0;
+    constexpr auto kPriority = 2.0;
 
     auto call_count = 0;
     CustomerRequestHandler customer_request_handler = [&call_count] (const CustomerRequest & request) {
-        auto customer = make_customer(kId, kArrivalTime);
+        auto customer = make_customer(kId, kArrivalTime, kPriority);
         customer->set_service_time(kServiceTime);
         request(customer);
         ++call_count;
@@ -660,6 +813,21 @@ void test_server()
     timer.advance_time();
     ASSERT_EQ(call_count, 2, "Called twice");
     ASSERT_EQ(serviced_customers.size(), size_t(1), "one serviced)");
+
+    auto higher_priority_customer = make_customer(kId + 1, kArrivalTime, kPriority - 1);
+    auto lower_priority_customer = make_customer(kId + 2, kArrivalTime, kPriority + 1);
+    auto swapped_customer = server.attempt_preempt(higher_priority_customer);
+
+    ASSERT_EQ(swapped_customer->id(), kId, "default customer got swapped out");
+
+    swapped_customer = server.attempt_preempt(lower_priority_customer);
+    ASSERT_EQ(swapped_customer->id(), kId + 2, "Low prio customer got returned back");
+
+    timer.advance_time();
+    ASSERT_EQ(call_count, 3, "Called thrice");
+    ASSERT_EQ(serviced_customers.size(), size_t(2), "two serviced)");
+
+    ASSERT_EQ(serviced_customers.back()->id(), higher_priority_customer->id(), "next serviced customer is high prio");
 }
 
 void test_random_load_balancer()

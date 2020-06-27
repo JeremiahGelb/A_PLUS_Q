@@ -67,6 +67,32 @@ public:
         return true;
     }
 
+    void incoming_preempted_customer(const std::shared_ptr<Customer> & customer)
+    {
+        if (!customer) {
+            throw std::runtime_error("incoming_preempted_customer got null customer");
+        }
+        if (constants::DEBUG_ENABLED) {
+            std::cout << "Queue::" << __func__
+                      << ": got {" << customer->to_string()
+                      << "}" << std::endl;
+        }
+        auto & priority_vector = customers_.at(customer->priority());
+        priority_vector.insert(priority_vector.begin(), customer);
+
+        if (priority_vector.size() > max_vector_size_) {
+            if (constants::DEBUG_ENABLED) {
+                std::cout << "Queue::" << __func__
+                        << " vector too large after performing preempt!"
+                        << " Kicking: " << priority_vector.back()->to_string()
+                        << std::endl;
+            }
+
+            on_customer_rejected(priority_vector.back());
+            priority_vector.pop_back();
+        }
+    }
+
     void accept_customer(const std::shared_ptr<Customer> & customer)
     {
         auto & priority_vector = customers_.at(customer->priority());
@@ -108,7 +134,28 @@ public:
                 priority_vector.push_back(customer);
                 break;
             case queueing::Discipline::PRIO_P:
-                throw std::runtime_error("TODO: unimplimented");
+                if (attempt_preempt_ == nullptr) {
+                    throw std::runtime_error("PRRIO_P Q running without preempt function");
+                }
+
+                if (priority_vector.empty() && requests_.empty()) {
+                    // Add entrance event assuming preempt goes through (fix this?)
+                    customer->add_event(CustomerEvent(CustomerEventType::EXITED,
+                                                      PlaceType::QUEUE,
+                                                      name_,
+                                                      current_time_()));
+
+                    auto swapped_customer = attempt_preempt_(customer);
+                    if (swapped_customer != customer) {
+                        incoming_preempted_customer(swapped_customer);
+                    } else {
+                        customer->delete_last_event();
+                        priority_vector.push_back(customer);
+                    }
+                } else {
+                    priority_vector.push_back(customer);
+                }
+                break;
             }
         }
 
@@ -119,6 +166,10 @@ public:
     {
         requests_.push(request);
         handle_requests();
+    }
+
+    void register_for_preempts(const CustomerSwapFunction & attempt_preempt) {
+        attempt_preempt_ = attempt_preempt;
     }
 
 private:
@@ -165,14 +216,13 @@ private:
             return customer;
         }
         case queueing::Discipline::PRIO_NP:
+        case queueing::Discipline::PRIO_P:
         {
             auto & customer_vector = lowest_non_empty_customer_vector();
             auto customer = customer_vector.front();
             customer_vector.erase(customer_vector.begin()); // oof the moves
             return customer;
         }
-        case queueing::Discipline::PRIO_P:
-            throw std::runtime_error("TODO: unimplimented");
         }
     }
 
@@ -225,4 +275,6 @@ private:
 
         https://dzone.com/articles/c-benchmark-–-stdvector-vs
     */
+
+   CustomerSwapFunction attempt_preempt_ = nullptr;
 };

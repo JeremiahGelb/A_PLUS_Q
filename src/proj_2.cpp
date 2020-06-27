@@ -15,7 +15,7 @@ namespace {
 
 queueing::Discipline to_discipline(project2::Discipline discipline)
 {
-    switch(discipline) {
+    switch (discipline) {
     case project2::Discipline::FCFS:
         return queueing::Discipline::FCFS;
     case project2::Discipline::LCFS_NP :
@@ -225,6 +225,13 @@ SimulationRunStats do_m_m_1_k(float lambda,
     };
 
     auto server = Server(timer, request_from_queue, exit_customer);
+    if (discipline == Discipline::PRIO_P) {
+        queue.register_for_preempts(
+            [&server] (const std::shared_ptr<Customer> & customer) {
+                return server.attempt_preempt(customer);
+            }
+        );
+    }
 
     // run simulation
     server.start();

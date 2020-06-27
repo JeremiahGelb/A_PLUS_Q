@@ -20,9 +20,14 @@ public:
 
     void start();
 
+    std::shared_ptr<Customer> attempt_preempt(const std::shared_ptr<Customer> & customer);
+
 private:
     void on_customer_entered_server(const std::shared_ptr<Customer> & customer);
     void on_customer_serviced(const std::shared_ptr<Customer> & customer);
+
+    std::uint32_t job_id_ = 0;
+    std::shared_ptr<Customer> customer_;
 
     const SimulationTimer & simulation_timer_;
     CustomerRequestHandler customer_request_handler_;

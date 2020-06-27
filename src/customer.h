@@ -14,7 +14,8 @@ constexpr std::uint32_t default_customer_priority() {
 enum class CustomerEventType {
     ENTERED,
     EXITED,
-    DROPPED_BY
+    DROPPED_BY,
+    PREEMPTED_FROM,
 };
 
 enum class PlaceType {
@@ -50,6 +51,8 @@ std::string to_string(CustomerEventType type)
         return "EXITED";
     case CustomerEventType::DROPPED_BY:
         return "DROPPED_BY";
+    case CustomerEventType::PREEMPTED_FROM:
+        return "PREEMPTED_FROM";
     }
 }
 
@@ -90,7 +93,7 @@ public:
     , departure_time_(departure_time)
     {}
 
-    std::string to_string(bool verbose = false)
+    std::string to_string(bool verbose = false) const
     {
         std::stringstream ss;
         ss << "id: "
@@ -158,6 +161,7 @@ public:
 
         for (std::uint32_t i = 0; i < events_.size() - 1; ++i) {
             const auto & event = events_[i];
+
             const auto & next_event = events_[i+1];
 
             if (event.event_type_ == CustomerEventType::ENTERED && event.place_type_ == PlaceType::QUEUE) {
@@ -165,7 +169,8 @@ public:
                         waiting_time += (next_event.time_ - event.time_);
                         // ++i // (could do this but it might not actually save time)
                 } else {
-                    throw std::runtime_error("Event following ENTER wasn't the right EXIT");
+                    std::cout << to_string(true) << std::endl;
+                    throw std::runtime_error("total_waiting_time Event following ENTER wasn't the right EXIT");
                 }
             }
         }
@@ -190,7 +195,8 @@ public:
                 if (next_event.event_type_ == CustomerEventType::EXITED && next_event.place_name_ == place_name) {
                         waiting_time += (next_event.time_ - event.time_);
                 } else {
-                    throw std::runtime_error("Event following ENTER wasn't the right EXIT");
+                    std::cout << to_string(true) << std::endl;
+                    throw std::runtime_error("waiting_time Event following ENTER wasn't the right EXIT");
                 }
             }
         }
@@ -257,6 +263,11 @@ public:
         events_.push_back(event);
     }
 
+    void delete_last_event() {
+        // TODO: remove this hack
+        events_.pop_back();
+    }
+
 private:
     std::uint32_t id_; // unique id for debug purposes
     float arrival_time_; // time they enter system
@@ -287,3 +298,4 @@ inline std::shared_ptr<Customer> make_customer(std::uint32_t id,
 
 using CustomerRequest = std::function<void(const std::shared_ptr<Customer> &)>;
 using CustomerRequestHandler = std::function<void(const CustomerRequest &)>;
+using CustomerSwapFunction = std::function<std::shared_ptr<Customer>(const std::shared_ptr<Customer> &)>;

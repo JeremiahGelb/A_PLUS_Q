@@ -49,16 +49,17 @@ public:
         return last_job_id_++;
     }
 
-    inline void remove_job(std::uint32_t id) const
+    inline float remove_job(std::uint32_t id) const
     {
         for (auto jobs_iterator = jobs_.begin(); jobs_iterator != jobs_.end(); ++jobs_iterator) {
             if (jobs_iterator->second.id() == id) {
+                float old_departure_time = jobs_iterator->first;
                 jobs_.erase(jobs_iterator);
                 if (constants::DEBUG_ENABLED) {
                     std::cout << "SimulationTimer::" << __func__
                             << " erased job: " << id << std::endl;
                 }
-                return;
+                return old_departure_time;
             }
         }
         throw std::runtime_error("remove_job called with invalid id");

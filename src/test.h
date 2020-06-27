@@ -111,5 +111,6 @@ void test_random_load_balancer();
 void test_customer_events();
 void test_priority_generator();
 void test_spy();
+void test_prio_p_queue();
 
 } // testing
