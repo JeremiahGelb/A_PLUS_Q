@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "customer.h"
+#include "stats.h"
 
 class SimulationSpy {
 public:
@@ -31,19 +32,25 @@ public:
         clear_stats();
     }
 
-    std::uint32_t serviced_customers()
+    std::uint32_t total_serviced_customers() const
     {
-        return serviced_customers_;
+        std::uint32_t total = 0;
+        for (const auto & priority_and_serviced_customers : serviced_customers_) {
+            total += priority_and_serviced_customers.second;
+        }
+        return total;
     }
 
     void on_customer_entering(const std::shared_ptr<Customer> & customer);
     void on_customer_exiting(const std::shared_ptr<Customer> & customer);
 
-    std::unordered_map<std::string, float> customer_loss_rates() const;
+    queue_name_to_priority_to_stat customer_loss_rates();
+    queue_name_to_priority_to_stat average_waiting_times();
+
     float average_service_time() const;
-    std::unordered_map<std::string, float> average_waiting_times() const;
+
     float average_system_time() const;
-    void print_proj1_stats() const;
+    void print_proj1_stats();
 
 private:
     void save_default_stats(const std::shared_ptr<Customer> & customer);
@@ -52,17 +59,20 @@ private:
 
     void clear_stats()
     {
-        system_entered_customers_ = 0;
-        serviced_customers_ = 0;
-        system_lost_customers_ = 0;
+        system_entered_customers_ = {};
+        system_lost_customers_ = {};
+        serviced_customers_ = {};
+
         total_service_time_ = 0; // TODO: this isn't right for cpu example
         total_system_time_ = 0;
+
         for (const auto & name : place_names_) {
-            waiting_times_by_queue_[name] = 0;
-            total_entrances_by_queue_[name] = 0;
-            unique_customers_by_queue_[name] = 0;
-            losses_by_queue_[name] = 0;
+            waiting_times_by_queue_[name] = {};
+            total_entrances_by_queue_[name] = {};
+            unique_customers_by_queue_[name] = {};
+            losses_by_queue_[name] = {};
         }
+
     }
 
     std::size_t L_;
@@ -72,13 +82,18 @@ private:
     std::unordered_map<std::uint32_t, std::shared_ptr<Customer>> system_customers_;
 
     // stats that must be cleared
-    std::unordered_map<std::string, float> waiting_times_by_queue_;
-    std::unordered_map<std::string, std::uint32_t> total_entrances_by_queue_;
-    std::unordered_map<std::string, std::uint32_t> unique_customers_by_queue_;
-    std::unordered_map<std::string, std::uint32_t> losses_by_queue_;
-    std::uint32_t system_entered_customers_;
-    std::uint32_t system_lost_customers_;
-    std::uint32_t serviced_customers_;
+    std::unordered_map<std::string, std::unordered_map<std::uint32_t, float>> waiting_times_by_queue_;
+
+    // This does not count if they are dropped by the queue
+    std::unordered_map<std::string, std::unordered_map<std::uint32_t, std::uint32_t>> total_entrances_by_queue_;
+
+    // this DOES count if they are dropped by
+    std::unordered_map<std::string, std::unordered_map<std::uint32_t, std:: uint32_t>> unique_customers_by_queue_;
+
+    std::unordered_map<std::string, std::unordered_map<std::uint32_t, std::uint32_t>> losses_by_queue_;
+    std::unordered_map<std::uint32_t, std::uint32_t> system_entered_customers_;
+    std::unordered_map<std::uint32_t, std::uint32_t> system_lost_customers_;
+    std::unordered_map<std::uint32_t, std::uint32_t> serviced_customers_;
     float total_service_time_;
     float total_system_time_;
 

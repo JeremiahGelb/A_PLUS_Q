@@ -1,6 +1,7 @@
 #include "proj_2.h"
 
 #include <iostream>
+#include <map>
 
 #include "simulation_timer.h"
 #include "simulation_spy.h"
@@ -41,8 +42,8 @@ void run_project_2(float lambda,
                    Discipline discipline,
                    const int runs)
 {
-    std::unordered_map<std::string, std::vector<float>> customer_loss_rates; // TODO: (will need to split this up by priority)
-    std::unordered_map<std::string, std::vector<float>> average_waiting_times; // TODO: (will need to split this up by priority)
+    std::map<std::string, std::map<std::uint32_t, std::vector<float>>> customer_loss_rates;
+    std::map<std::string, std::map<std::uint32_t, std::vector<float>>> average_waiting_times;
     std::vector<float> system_times;
     for (auto i = 0; i < runs; ++i) {
         if (constants::PRINT_STATS) {
@@ -57,12 +58,22 @@ void run_project_2(float lambda,
                                discipline,
                                i*constants::SEED_OFFSET);
 
-        for (const auto name_and_clr : stat.customer_loss_rates()) {
-            customer_loss_rates[name_and_clr.first].push_back(name_and_clr.second);
+        for (const auto & name_and_clr_map : stat.customer_loss_rates()) {
+            auto & name = name_and_clr_map.first;
+            for (const auto & priority_and_clr : name_and_clr_map.second) {
+                auto priority = priority_and_clr.first;
+                auto clr = priority_and_clr.second;
+                customer_loss_rates[name][priority].push_back(clr);
+            }
         }
 
-        for (const auto name_and_time : stat.average_waiting_times()) {
-            average_waiting_times[name_and_time.first].push_back(name_and_time.second);
+        for (const auto & name_and_time_map : stat.average_waiting_times()) {
+            auto & name = name_and_time_map.first;
+            for (const auto & priority_and_time : name_and_time_map.second) {
+                auto priority = priority_and_time.first;
+                auto time = priority_and_time.second;
+                average_waiting_times[name][priority].push_back(time);
+            }
         }
 
         system_times.push_back(stat.average_system_time());
@@ -72,20 +83,37 @@ void run_project_2(float lambda,
         }
     }
 
+    auto to_string = [] (std::uint32_t priority) {
+        if (priority == SimulationRunStats::all_priorities()) {
+            return std::string("AVERAGE");
+        } else {
+            return std::to_string(priority);
+        }
+    };
+
     if (constants::PRINT_STATS) {
         std::cout << std::endl << "Customer Loss Rates:" << std::endl;
-        for (const auto & name_and_clr_vector : customer_loss_rates) {
-            std::cout << name_and_clr_vector.first << ": "
-                      << statistics::confidence_interval_string(name_and_clr_vector.second)
-                      << std::endl;
+        for (const auto & name_and_clr_vector_map : customer_loss_rates) {
+            std::cout << name_and_clr_vector_map.first << ":" << std::endl;
+
+            for (const auto & priority_and_clr : name_and_clr_vector_map.second) {
+                std::cout << "    Priority_" << to_string(priority_and_clr.first) << ":"
+                          << " CLR: " << statistics::confidence_interval_string(priority_and_clr.second)
+                          << std::endl;
+            }
         }
         std::cout << std::endl;
 
         std::cout << std::endl << "Waiting Times: " << std::endl;
-        for (const auto & name_and_time_vector : average_waiting_times) {
-            std::cout << name_and_time_vector.first << ": "
-                      << statistics::confidence_interval_string(name_and_time_vector.second)
-                      << std::endl;
+
+        for (const auto & name_and_time_vector_map : average_waiting_times) {
+            std::cout << name_and_time_vector_map.first << ":" << std::endl;
+
+            for (const auto & priority_and_time : name_and_time_vector_map.second) {
+                std::cout << "    Priority_" << to_string(priority_and_time.first) << ":"
+                          << " Waiting Time: " << statistics::confidence_interval_string(priority_and_time .second)
+                          << std::endl;
+            }
         }
         std::cout << std::endl;
 
@@ -203,7 +231,7 @@ SimulationRunStats do_m_m_1_k(float lambda,
     server.start();
     incoming_customers.start();
 
-    while (spy.serviced_customers() < customers_to_serve) {
+    while (spy.total_serviced_customers() < customers_to_serve) {
         timer.advance_time();
     }
 
@@ -340,7 +368,7 @@ SimulationRunStats do_web_server(float lambda,
     io_server_3.start();
     incoming_customers.start();
 
-    while (spy.serviced_customers() < customers_to_serve) {
+    while (spy.total_serviced_customers() < customers_to_serve) {
         timer.advance_time();
     }
 

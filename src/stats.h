@@ -4,22 +4,24 @@
 #include <tgmath.h>
 #include <unordered_map>
 
+using queue_name_to_priority_to_stat = std::unordered_map<std::string, std::unordered_map<std::uint32_t, float>>;
+
 class SimulationRunStats {
 public:
-    SimulationRunStats(const std::unordered_map<std::string, float> & customer_loss_rates,
-                       const std::unordered_map<std::string, float> & average_waiting_times,
+    SimulationRunStats(const queue_name_to_priority_to_stat & customer_loss_rates,
+                       const queue_name_to_priority_to_stat & average_waiting_times,
                        float average_system_time)
     : customer_loss_rates_(customer_loss_rates)
     , average_waiting_times_(average_waiting_times)
     , average_system_time_(average_system_time)
     {}
 
-    std::unordered_map<std::string, float> customer_loss_rates()
+    queue_name_to_priority_to_stat customer_loss_rates()
     {
         return customer_loss_rates_;
     }
 
-    std::unordered_map<std::string, float> average_waiting_times()
+    queue_name_to_priority_to_stat average_waiting_times()
     {
         return average_waiting_times_;
     }
@@ -29,9 +31,17 @@ public:
         return average_system_time_;
     }
 
+    static std::uint32_t all_priorities() {
+        return UINT32_MAX;
+    }
+
+    static std::string all_queues() {
+        return "overall";
+    }
+
 private:
-    std::unordered_map<std::string, float> customer_loss_rates_;
-    std::unordered_map<std::string, float> average_waiting_times_;
+    queue_name_to_priority_to_stat customer_loss_rates_;
+    queue_name_to_priority_to_stat average_waiting_times_;
     float average_system_time_;
 };
 

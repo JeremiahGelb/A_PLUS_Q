@@ -17,7 +17,7 @@ class IncomingCustomers {
 public:
     IncomingCustomers(const SimulationTimer & simulation_timer,
                       const ArrivalTimeGenerator & arrival_time_generator,
-                      const std::function<std::uint32_t()> & generate_priority = [] {return 1;})
+                      const std::function<std::uint32_t()> & generate_priority = [] { return default_customer_priority(); })
     : simulation_timer_(simulation_timer)
     , arrival_time_generator_(arrival_time_generator)
     , generate_priority_(generate_priority)

@@ -219,14 +219,13 @@ public:
                              });
     }
 
-    std::string dropped_by()
+    const std::string & dropped_by()
     {
         const auto & event = events_.back();
         if (event.event_type_ == CustomerEventType::DROPPED_BY) {
             return event.place_name_;
         } else {
             throw std::runtime_error("dropped_by called on customer who wasn't dropped");
-            return "";
         }
     }
 

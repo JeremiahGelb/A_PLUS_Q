@@ -69,7 +69,7 @@ void run_project_1(const float lambda,
     server.start();
     incoming_customers.start();
 
-    while (spy.serviced_customers() < customers_to_serve) {
+    while (spy.total_serviced_customers() < customers_to_serve) {
         timer.advance_time();
     }
 

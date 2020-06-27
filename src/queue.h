@@ -80,10 +80,12 @@ public:
                         << std::endl;
             }
             customer->set_service_time(service_time_generator_.generate());
+
             customer->add_event(CustomerEvent(CustomerEventType::ENTERED,
                                               PlaceType::QUEUE,
                                               name_,
                                               current_time_()));
+
             switch (discipline_) {
             case queueing::Discipline::FCFS:
                 priority_vector.push_back(customer);
