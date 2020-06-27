@@ -143,7 +143,6 @@ SimulationRunStats do_one_run(float lambda,
                              max_cpu_queue_customers,
                              max_io_queue_customers,
                              customers_to_serve,
-                             discipline,
                              seed_offset);
     }
 }
@@ -244,7 +243,6 @@ SimulationRunStats do_web_server(float lambda,
                                  std::size_t max_cpu_queue_customers,
                                  std::size_t max_io_queue_customers,
                                  std::size_t customers_to_serve,
-                                 Discipline discipline,
                                  long seed_offset)
 {
     constexpr float kCpuMu = 1.0;
@@ -284,25 +282,25 @@ SimulationRunStats do_web_server(float lambda,
                            exit_customer,
                            ExponentialGenerator(kCpuMu, cpu_service_seed),
                            [&timer]{ return timer.time(); },
-                           to_discipline(discipline),
+                           queueing::Discipline::FCFS,
                            kCpuQueueName);
     auto io_queue_1 = Queue(max_io_queue_customers,
                             exit_customer,
                             ExponentialGenerator(kIoMu, io_service_seed_1),
                             [&timer]{ return timer.time(); },
-                            to_discipline(discipline),
+                            queueing::Discipline::FCFS,
                             kIoQueueName1);
     auto io_queue_2 = Queue(max_io_queue_customers,
                             exit_customer,
                             ExponentialGenerator(kIoMu, io_service_seed_2),
                             [&timer]{ return timer.time(); },
-                            to_discipline(discipline),
+                            queueing::Discipline::FCFS,
                             kIoQueueName2);
     auto io_queue_3 = Queue(max_io_queue_customers,
                             exit_customer,
                             ExponentialGenerator(kIoMu, io_service_seed_3),
                             [&timer]{ return timer.time(); },
-                            to_discipline(discipline),
+                            queueing::Discipline::FCFS,
                             kIoQueueName3);
 
     CustomerRequest insert_into_cpu_queue = [&cpu_queue] (const std::shared_ptr<Customer> & customer) {

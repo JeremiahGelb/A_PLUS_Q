@@ -46,7 +46,6 @@ SimulationRunStats do_web_server(float lambda,
                                  std::size_t max_cpu_queue_customers,
                                  std::size_t max_io_queue_customers,
                                  std::size_t customers_to_serve,
-                                 Discipline discipline,
                                  long seed_offset);
 
 } // project2
