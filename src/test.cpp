@@ -14,6 +14,7 @@
 #include "server.h"
 #include "random_load_balancer.h"
 #include "priority_generator.h"
+#include "simulation_spy.h"
 
 namespace testing {
 
@@ -34,7 +35,8 @@ void run_all_tests()
         std::make_pair("Random Load Balancer", test_random_load_balancer),
         std::make_pair("Customer events", test_customer_events),
         std::make_pair("Priority Generator", test_priority_generator),
-        std::make_pair("Priority Non Preempt", test_prio_np_queue)
+        std::make_pair("Priority Non Preempt", test_prio_np_queue),
+        std::make_pair("Spy", test_spy)
     };
 
     auto failure_count = 0;
@@ -799,6 +801,170 @@ void test_priority_generator()
         constexpr int kMaxDifference = kExpectedCount / 50; // 2% error
         ASSERT_LT(abs(count - kExpectedCount), kMaxDifference, "count was close to expected");
     }
+}
+
+void test_spy()
+{
+    auto customer = make_customer(1, 0, 1);
+    auto customer2 = make_customer(2, 0, 2);
+    auto customer3 = make_customer(3, 0, 2);
+    customer->set_serviced(true);
+    customer2->set_serviced(true);
+    customer3->set_serviced(false);
+
+    constexpr float kEnteredQueue = 1.0;
+    constexpr float kExitedQueue = 2.0;
+    constexpr float kExitedQueueLong = 3.0;
+
+    std::string queue_name_1("queue1");
+    std::string queue_name_2("queue2");
+
+    // Customer 1 enters queue1 twice, taking 1 second each
+    // Customer 1 enters queue2 once, taking 1 second
+    // Customer 1 has 3s of total waiting time
+    customer->add_event(CustomerEvent(CustomerEventType::ENTERED,
+                                      PlaceType::QUEUE,
+                                      queue_name_1,
+                                      kEnteredQueue));
+    customer->add_event(CustomerEvent(CustomerEventType::EXITED,
+                                      PlaceType::QUEUE,
+                                      queue_name_1,
+                                      kExitedQueue));
+
+    customer->add_event(CustomerEvent(CustomerEventType::ENTERED,
+                                      PlaceType::QUEUE,
+                                      queue_name_1,
+                                      kEnteredQueue));
+    customer->add_event(CustomerEvent(CustomerEventType::EXITED,
+                                      PlaceType::QUEUE,
+                                      queue_name_1,
+                                      kExitedQueue));
+
+    customer->add_event(CustomerEvent(CustomerEventType::ENTERED,
+                                      PlaceType::QUEUE,
+                                      queue_name_2,
+                                      kEnteredQueue));
+
+    customer->add_event(CustomerEvent(CustomerEventType::EXITED,
+                                      PlaceType::QUEUE,
+                                      queue_name_2,
+                                      kExitedQueue));
+
+    // Customer 2 goes into queue 1 once, and it takes 2 seconds
+    // Customer 2 goes into queue 2 once, and it takes 2 seconds
+    // customer 2 is in system for 4 seconds total
+    customer2->add_event(CustomerEvent(CustomerEventType::ENTERED,
+                                      PlaceType::QUEUE,
+                                      queue_name_1,
+                                      kEnteredQueue));
+    customer2->add_event(CustomerEvent(CustomerEventType::EXITED,
+                                      PlaceType::QUEUE,
+                                      queue_name_1,
+                                      kExitedQueueLong));
+
+    customer2->add_event(CustomerEvent(CustomerEventType::ENTERED,
+                                      PlaceType::QUEUE,
+                                      queue_name_2,
+                                      kEnteredQueue));
+    customer2->add_event(CustomerEvent(CustomerEventType::EXITED,
+                                      PlaceType::QUEUE,
+                                      queue_name_2,
+                                      kExitedQueueLong));
+
+    // customer 3 is immediately dropped by queue1
+    customer3->add_event(CustomerEvent(CustomerEventType::DROPPED_BY,
+                                      PlaceType::QUEUE,
+                                      queue_name_1,
+                                      kEnteredQueue));
+
+    constexpr auto kNoLVal = 0;
+    constexpr auto kMaxSize = 100;
+    constexpr auto kTransientPeriod = 1000;
+    SimulationSpy spy(kNoLVal,
+                      kMaxSize,
+                      {queue_name_1, queue_name_2},
+                      kTransientPeriod);
+
+    spy.on_customer_entering(customer);
+    spy.on_customer_exiting(customer);
+    spy.on_customer_entering(customer2);
+    spy.on_customer_exiting(customer2);
+    spy.on_customer_entering(customer3);
+    spy.on_customer_exiting(customer3);
+
+    queue_name_to_priority_to_stat waiting_times = spy.average_waiting_times();
+    queue_name_to_priority_to_stat clrs = spy.customer_loss_rates();
+
+    if (constants::DEBUG_ENABLED) {
+        for (const auto & name_and_waiting_time_map : waiting_times) {
+            std::cout << name_and_waiting_time_map.first << std::endl;
+            for (const auto & priority_and_waiting_time : name_and_waiting_time_map.second) {
+                std::cout << "    Priority-" << priority_and_waiting_time.first
+                        << ": waiting_time = " << priority_and_waiting_time.second
+                        << std::endl;
+            }
+        }
+
+        for (const auto & name_and_waiting_clr_map : clrs) {
+            std::cout << name_and_waiting_clr_map.first << std::endl;
+            for (const auto & priority_and_clr : name_and_waiting_clr_map.second) {
+                std::cout << "    Priority-" << priority_and_clr.first
+                        << ": clr = " << priority_and_clr.second
+                        << std::endl;
+            }
+        }
+    }
+
+    // RECAP
+    // P1Customer 1 enters queue1 twice, taking 1 second each
+    // P1Customer 1 enters queue2 once, taking 1 second
+    // P1Customer 1 has 3s of total waiting time
+    // P2Customer 2 goes into queue 1 once, and it takes 2 seconds
+    // P2Customer 2 goes into queue 2 once, and it takes 2 seconds
+    // P2customer 2 is in system for 4 seconds total
+    // P2customer 3 is immediately dropped by queue1
+
+    // THUS queue 1 has seen the following waiting times
+    //         priority 1 : [1, 1]
+    //         priority 2 : [2]
+    // Thus we exepect queue 1 to have an average overall waiting time of 1.333
+    // Thus the average p1 waiting time for queue 1 is 1
+    // Thus the average p2 waiting time for queue 1 is 2
+    ASSERT_EQ(waiting_times[queue_name_1][SimulationRunStats::all_priorities()], float(4.0/3), "queue one avg correct wt");
+    ASSERT_EQ(waiting_times[queue_name_1][1], float(1), "queue one p1 correct wt");
+    ASSERT_EQ(waiting_times[queue_name_1][2], float(2), "queue one p2 correct wt");
+
+    // THUS queue 2 has seen the following waiting times
+    //         priority 2 : [1]
+    //         priority 2 : [2]
+    // Thus we exepect queue 2 to have an average overall waiting time of 1.5
+    // Thus the average p1 waiting time for queue 1 is 1
+    // Thus the average p2 waiting time for queue 1 is 2
+    ASSERT_EQ(waiting_times[queue_name_2][SimulationRunStats::all_priorities()], float(3.0/2), "queue two avg correct wt");
+    ASSERT_EQ(waiting_times[queue_name_2][1], float(1), "queue two p1 correct wt");
+    ASSERT_EQ(waiting_times[queue_name_2][2], float(2), "queue two p2 correct wt");
+
+    // Thus from the customer perspective:
+    // The Average serviced p1 customer waits a total of 3
+    // The Average serviced p2 customer waits a toal of 4
+    // The average servicd customer waits 3.5
+    ASSERT_EQ(waiting_times[SimulationRunStats::all_queues()][SimulationRunStats::all_priorities()], float(7.0/2), "all qs avg correct wt");
+    ASSERT_EQ(waiting_times[SimulationRunStats::all_queues()][1], float(3), "all qs p1 correct wt");
+    ASSERT_EQ(waiting_times[SimulationRunStats::all_queues()][2], float(4), "all qs p2 correct wt");
+
+    // in terms of CLR, things are more obvious
+    ASSERT_EQ(clrs[queue_name_1][SimulationRunStats::all_priorities()], float(1.0/3), "queue one avg correct clr");
+    ASSERT_EQ(clrs[queue_name_1][1], float(0), "queue one p1 correct clr");
+    ASSERT_EQ(clrs[queue_name_1][2], float(1.0/2), "queue one p2 correct clr");
+
+    ASSERT_EQ(clrs[queue_name_2][SimulationRunStats::all_priorities()], float(0), "queue two avg correct clr");
+    ASSERT_EQ(clrs[queue_name_2][1], float(0), "queue two p1 correct clr");
+    ASSERT_EQ(clrs[queue_name_2][2], float(0), "queue two p2 correct clr");
+
+    ASSERT_EQ(clrs[SimulationRunStats::all_queues()][SimulationRunStats::all_priorities()], float(1.0/3), "all qs avg correct clr");
+    ASSERT_EQ(clrs[SimulationRunStats::all_queues()][1], float(0), "all qs p1 correct clr");
+    ASSERT_EQ(clrs[SimulationRunStats::all_queues()][2], float(1.0/2), "all qs p2 correct clr");
+
 }
 
 } // testing

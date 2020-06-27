@@ -3,8 +3,6 @@
 #include "simulation_spy.h"
 #include "constants.h"
 
-// TODO: unit test this class
-
 void SimulationSpy::on_customer_entering(const std::shared_ptr<Customer> & customer)
 {
     if (constants::DEBUG_ENABLED) {
@@ -59,6 +57,7 @@ void SimulationSpy::on_customer_exiting(const std::shared_ptr<Customer> & custom
 
 void SimulationSpy::on_transient_period_elapsed()
 {
+    // TODO: consider testing this (manually tested once)
     if (constants::DEBUG_ENABLED) {
         std::cout << "SimulationSpy::" << __func__
                   << " erasing stats!" << std::endl;
@@ -72,12 +71,16 @@ void SimulationSpy::save_default_stats(const std::shared_ptr<Customer> & custome
     // TODO: consider making one big helper function (on customer)
     // that returns waiting times, entrances and losses
     // this will avoid iterating multiple times
+    if (constants::DEBUG_ENABLED) {
+        std::cout << "SimulationSpy::" << __func__ << " entered" << std::endl;
+    }
+
     auto priority = customer->priority();
 
     if (customer->serviced()) {
         ++serviced_customers_[priority];
 
-        for (const auto & name : place_names_) {
+        for (const auto & name : queue_names_) {
             auto entrances = customer->entrances(name);
             total_entrances_by_queue_[name][priority] += entrances;
             if (entrances > 0) {
@@ -92,6 +95,9 @@ void SimulationSpy::save_default_stats(const std::shared_ptr<Customer> & custome
         losses_by_queue_[dropper][priority] += 1;
         unique_customers_by_queue_[dropper][priority] += 1;
         ++system_lost_customers_[customer->priority()];
+    }
+    if (constants::DEBUG_ENABLED) {
+        std::cout << "SimulationSpy::" << __func__ << " exited" << std::endl;
     }
 }
 

@@ -221,6 +221,10 @@ public:
 
     const std::string & dropped_by()
     {
+        if (events_.empty()) {
+            throw std::runtime_error("customer has no events in dropped_by");
+        }
+
         const auto & event = events_.back();
         if (event.event_type_ == CustomerEventType::DROPPED_BY) {
             return event.place_name_;

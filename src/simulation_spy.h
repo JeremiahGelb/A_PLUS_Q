@@ -12,11 +12,11 @@ class SimulationSpy {
 public:
     SimulationSpy(std::size_t L,
                   std::size_t maximum_system_customers,
-                  const std::vector<std::string> & place_names,
+                  const std::vector<std::string> & queue_names,
                   std::uint32_t transient_period = 0)
     : L_(L)
     , transient_period_(transient_period)
-    , place_names_(place_names)
+    , queue_names_(queue_names)
     , system_customers_()
     , system_entered_customers_(0)
     , system_lost_customers_(0)
@@ -66,7 +66,7 @@ private:
         total_service_time_ = 0; // TODO: this isn't right for cpu example
         total_system_time_ = 0;
 
-        for (const auto & name : place_names_) {
+        for (const auto & name : queue_names_) {
             waiting_times_by_queue_[name] = {};
             total_entrances_by_queue_[name] = {};
             unique_customers_by_queue_[name] = {};
@@ -77,7 +77,7 @@ private:
 
     std::size_t L_;
     std::uint32_t transient_period_;
-    std::vector<std::string> place_names_;
+    std::vector<std::string> queue_names_;
 
     std::unordered_map<std::uint32_t, std::shared_ptr<Customer>> system_customers_;
 
