@@ -27,6 +27,25 @@ C = Customers to service before exiting
 L = Arbitrary integer of which customers to print
 ```
 
+## RUN PROJECT 2
+Project 2 -> Simulate MM1K queue with poisson arrivals (various disciplines)
+Simulate "Webserver"
+
+```
+             ------------------------------------------------------------------<--|
+            |                                                                     |
+            v                                           -> [IO-Q-1]->[IO-SERV1]-->|
+            |                                          /p=.1                       \
+            |                                         /                              \
+[customers] -> [CPU-Q]->[CPU-SERV]->[LD-BLNC]-------->------->[IO-Q-2]->[IO-SERV-2]-->|
+                                                   |  \     p=.1                     / 
+                                                   |   \p=.1                        /
+                                                   |    -> [IO--3]->[IO-SERV-3]---->
+                                                   v
+                                         (leave system with .7 probability)
+```
+
+
 ## TEST
 ```
 ./run.o --test
