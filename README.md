@@ -45,6 +45,21 @@ Simulate "Webserver"
                                          (leave system with .7 probability)
 ```
 
+```
+./run.o --proj2 Lambda K-cpu K-io C L M
+
+EG
+
+./run.o --proj2 .3 40 5 3333 0 3
+
+Lambda = Parameter of exponentially distributed inter-arrival times 
+         (higher = faster arrivals. Stable for 0 < Lambda < 1)
+K-cpu = Size of CPU Queue
+K-IO = size of IO queues
+C = Customers to service before exiting
+L = Select mode (0 is mm1k, 1 is CPU)
+M = Select Discipline (1 – FCFS, 2 – LCFS-NP, 3 – SJF-NP, 4 – Prio-NP, 5 – Prio-P)
+```
 
 ## TEST
 ```
