@@ -1,5 +1,5 @@
 # A_PLUS_Q
-Queuing simulation for ECE 579 
+Queuing simulation for ECE 579
 
 ## BUILD
 ```
@@ -20,7 +20,7 @@ EG
 
 ./run.o --proj1 .5 20 100000 50000
 
-Lambda = Parameter of exponentially distributed inter-arrival times 
+Lambda = Parameter of exponentially distributed inter-arrival time
          (higher = faster arrivals. Stable for 0 < Lambda < 1)
 K = Size of queue
 C = Customers to service before exiting
@@ -38,7 +38,7 @@ Simulate "Webserver"
             |                                          /p=.1                       \
             |                                         /                              \
 [customers] -> [CPU-Q]->[CPU-SERV]->[LD-BLNC]-------->------->[IO-Q-2]->[IO-SERV-2]-->|
-                                                   |  \     p=.1                     / 
+                                                   |  \     p=.1                     /
                                                    |   \p=.1                        /
                                                    |    -> [IO--3]->[IO-SERV-3]---->
                                                    v
@@ -52,7 +52,7 @@ EG
 
 ./run.o --proj2 .3 40 5 3333 0 3
 
-Lambda = Parameter of exponentially distributed inter-arrival times 
+Lambda = Parameter of exponentially distributed inter-arrival times
          (higher = faster arrivals. Stable for 0 < Lambda < 1)
 K-cpu = Size of CPU Queue
 K-IO = size of IO queues
