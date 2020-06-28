@@ -16,6 +16,8 @@ enum class CustomerEventType {
     EXITED,
     DROPPED_BY,
     PREEMPTED_FROM,
+    // TODO: add (preempt into and use it in waiting time calculation)
+    // That will allow putting back the events
 };
 
 enum class PlaceType {
