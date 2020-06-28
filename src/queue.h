@@ -266,15 +266,6 @@ private:
     const std::function<float()> current_time_;
     queueing::Discipline discipline_;
     const std::string name_;
-    /*
-        to support different disciplines: managing customers in a vector. Because the queue size is unlikely to be very large
-        vector will be faster that std::list even for random insert/remove
-
-        https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md
-        SL.con.2
-
-        https://dzone.com/articles/c-benchmark-–-stdvector-vs
-    */
 
    CustomerSwapFunction attempt_preempt_ = nullptr;
 };

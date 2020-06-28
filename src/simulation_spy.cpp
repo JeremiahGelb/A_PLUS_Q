@@ -174,7 +174,6 @@ SimulationSpy::customer_loss_rates()
 queue_name_to_priority_to_stat
 SimulationSpy::average_waiting_times()
 {
-
     queue_name_to_priority_to_stat average_times;
     for (auto & name_and_total_entrances_map : total_entrances_by_queue_) {
         auto & name = name_and_total_entrances_map.first;
@@ -186,24 +185,24 @@ SimulationSpy::average_waiting_times()
             auto total_entrances = priority_and_total_entrances.second;
             auto average_waiting_time = waiting_time / total_entrances;
             auto serviced_customers = serviced_customers_[priority];
-            auto average_enterances = total_entrances / serviced_customers;
-
+            auto average_enterances = float(total_entrances) / serviced_customers;
             average_times[name][priority] = average_waiting_time;
             average_times[SimulationRunStats::all_queues()][priority] += average_waiting_time * average_enterances;
 
             name_waiting_time += waiting_time;
             name_total_entrances += total_entrances;
         }
-
         // this is the average waiting time any customer expects to wait given they enter a given queue
         auto name_average_waiting_time = name_waiting_time / name_total_entrances;
         average_times[name][SimulationRunStats::all_priorities()] = name_average_waiting_time;
-
         // this is the average total waiting in all queues time from customer perspective
         auto name_average_enterances = name_total_entrances / total_serviced_customers();
+
+        // TODO: actually propogate this correctly
+        // std::cout << "name " << name << " average_enterances " << name_average_enterances << std::endl;
+
         average_times[SimulationRunStats::all_queues()][SimulationRunStats::all_priorities()] += name_average_waiting_time * name_average_enterances;
     }
-
     return average_times;
 }
 

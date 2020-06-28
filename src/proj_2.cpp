@@ -189,9 +189,9 @@ SimulationRunStats do_m_m_1_k(float lambda,
         break;
     case project2::Discipline::PRIO_NP:
     case project2::Discipline::PRIO_P:
-        generate_priority = [&priority_generator] { return priority_generator.generate(); };
-        min_priority = 1;
-        max_priority = 4;
+        generate_priority = [&priority_generator, kMinPriority, kMaxPriority] { return priority_generator.generate(); };
+        min_priority = kMinPriority;
+        max_priority = kMaxPriority;
         break;
     }
 
