@@ -172,14 +172,16 @@ void test_prng()
     constexpr float kLambda = 1;
     constexpr long kArbitratyOffset = 1000;
 
-    ExponentialGenerator default_exp_gen(kLambda);
+    auto default_exp_gen = [gen = ExponentialGenerator(kLambda)] {
+        return gen.generate();
+    };
     ExponentialGenerator seeded_exp_gen(kLambda, kSeed);
     ExponentialGenerator same_seeded_exp_gen(kLambda, kSeed);
 
     ExponentialGenerator bigger_lambda_exp_gen(10*kLambda, kSeed + kArbitratyOffset);
 
-    auto first_default_float = default_exp_gen.generate();
-    auto second_default_float = default_exp_gen.generate();
+    auto first_default_float = default_exp_gen();
+    auto second_default_float = default_exp_gen();
 
     auto first_seeded_float = seeded_exp_gen.generate();
     auto second_seeded_float = same_seeded_exp_gen.generate();
