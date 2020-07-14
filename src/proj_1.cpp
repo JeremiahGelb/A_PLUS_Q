@@ -42,7 +42,9 @@ void run_project_1(const float lambda,
 
     auto queue = Queue(max_queue_customers,
                        exit_customer,
-                       ExponentialGenerator(kMu, kServiceSeed),
+                       [gen = ExponentialGenerator(kMu, kServiceSeed)] {
+                            return gen.generate();
+                       },
                        [&timer]{ return timer.time(); },
                        queueing::Discipline::FCFS,
                        kQueueName);

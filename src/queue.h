@@ -22,12 +22,11 @@ namespace queueing {
 
 } // queueing
 
-template <class ServiceTimeGenerator>
 class Queue {
 public:
     Queue(std::size_t max_size,
           const CustomerRequest & exit_customer,
-          const ServiceTimeGenerator & service_time_generator,
+          const std::function<float()> & service_time_generator,
           const std::function<float()> & current_time,
           queueing::Discipline discipline = queueing::Discipline::FCFS,
           const std::string & name = "Queue",
@@ -35,7 +34,7 @@ public:
           std::uint32_t maximum_priority = default_customer_priority())
     : max_vector_size_(max_size / (maximum_priority - minimum_priority + 1))
     , exit_customer_(exit_customer)
-    , service_time_generator_(service_time_generator)
+    , generate_service_time_(service_time_generator)
     , current_time_(current_time)
     , discipline_(discipline)
     , name_(name)
@@ -105,7 +104,7 @@ public:
                         << " adding customer: " << customer->to_string()
                         << std::endl;
             }
-            customer->set_service_time(service_time_generator_.generate());
+            customer->set_service_time(generate_service_time_());
 
             customer->add_event(CustomerEvent(CustomerEventType::ENTERED,
                                               PlaceType::QUEUE,
@@ -262,7 +261,7 @@ private:
     CustomerRequest exit_customer_;
     std::queue<std::function<void(std::shared_ptr<Customer>)>> requests_;
     std::map<std::uint32_t , std::vector<std::shared_ptr<Customer>>> customers_;
-    ServiceTimeGenerator service_time_generator_;
+    std::function<float()> generate_service_time_;
     const std::function<float()> current_time_;
     queueing::Discipline discipline_;
     const std::string name_;

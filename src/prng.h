@@ -5,9 +5,9 @@ public:
     RandomNumberGenerator(long seed = 0)
     : seed_(seed)
     {}
-    virtual float generate() = 0;
+    virtual float generate() const = 0;
 protected:
-    long seed_;
+    mutable long seed_;
 };
 
 class ExponentialGenerator : public RandomNumberGenerator {
@@ -17,7 +17,7 @@ public:
     , one_over_lambda_(1/lambda)
     {}
 
-    float generate() override;
+    float generate() const override;
 private:
     float one_over_lambda_;
 };
@@ -28,5 +28,5 @@ public:
     : RandomNumberGenerator(seed)
     {}
 
-    float generate() override;
+    float generate() const override;
 };

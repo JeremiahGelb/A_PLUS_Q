@@ -16,6 +16,15 @@
 #include "priority_generator.h"
 #include "simulation_spy.h"
 
+namespace {
+
+auto make_exp_gen_lambda(float kLambda) {
+    return [gen = ExponentialGenerator(kLambda)] { return gen.generate(); };
+}
+
+} //anonymous
+
+
 namespace testing {
 
 void run_all_tests()
@@ -253,7 +262,7 @@ void test_fcfs_queue()
     };
 
     constexpr float kLambda = 1;
-    auto queue = Queue(kMaxSize, exit_customer, ExponentialGenerator(kLambda), []{ return 0; });
+    auto queue = Queue(kMaxSize, exit_customer, make_exp_gen_lambda(kLambda), []{ return 0; });
 
     ASSERT_EQ(queue.size(), std::size_t(0), "queue empty at start");
 
@@ -342,7 +351,7 @@ void test_lcfs_queue()
     constexpr float kLambda = 1;
     auto queue = Queue(kMaxSize,
                        exit_customer,
-                       ExponentialGenerator(kLambda),
+                       make_exp_gen_lambda(kLambda),
                        []{ return 0; },
                        queueing::Discipline::LCFS_NP);
 
@@ -433,7 +442,7 @@ void test_sjf_queue()
     constexpr float kLambda = 1;
     auto queue = Queue(kMaxSize,
                        exit_customer,
-                       ExponentialGenerator(kLambda),
+                       make_exp_gen_lambda(kLambda),
                        []{ return 0; },
                        queueing::Discipline::SJF_NP);
 
@@ -531,7 +540,7 @@ void test_prio_np_queue()
     try {
         auto queue = Queue(kBadMaxSize,
                            exit_customer,
-                           ExponentialGenerator(kLambda),
+                           make_exp_gen_lambda(kLambda),
                            []{ return 0; },
                            queueing::Discipline::PRIO_NP,
                            "q",
@@ -542,7 +551,7 @@ void test_prio_np_queue()
 
     auto queue = Queue(kMaxSize,
                        exit_customer,
-                       ExponentialGenerator(kLambda),
+                       make_exp_gen_lambda(kLambda),
                        []{ return 0; },
                        queueing::Discipline::PRIO_NP,
                        "q",
@@ -648,7 +657,7 @@ void test_prio_p_queue()
     try {
         auto queue = Queue(kBadMaxSize,
                            exit_customer,
-                           ExponentialGenerator(kLambda),
+                           make_exp_gen_lambda(kLambda),
                            []{ return 0; },
                            queueing::Discipline::PRIO_P,
                            "q",
@@ -659,7 +668,7 @@ void test_prio_p_queue()
 
     auto queue = Queue(kMaxSize,
                        exit_customer,
-                       ExponentialGenerator(kLambda),
+                       make_exp_gen_lambda(kLambda),
                        []{ return 0; },
                        queueing::Discipline::PRIO_P,
                        "q",

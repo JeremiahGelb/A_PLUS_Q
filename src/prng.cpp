@@ -31,13 +31,13 @@ while (dummy == 0.0);
 }
 // ------------------- END CODE FROM LECTURE MATERIAL -----------
 
-float ExponentialGenerator::generate()
+float ExponentialGenerator::generate() const
 {
    // will modify seed
    return one_over_lambda_*expdev(&seed_);
 }
 
-float UniformGenerator::generate()
+float UniformGenerator::generate() const
 {
    return ran0(&seed_);
 }

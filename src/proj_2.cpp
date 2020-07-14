@@ -201,7 +201,9 @@ SimulationRunStats do_m_m_1_k(float lambda,
 
     auto queue = Queue(max_cpu_queue_customers,
                        exit_customer,
-                       ExponentialGenerator(kMu, service_seed),
+                       [gen = ExponentialGenerator(kMu, service_seed)] {
+                            return gen.generate();
+                       },
                        [&timer]{ return timer.time(); },
                        to_discipline(discipline),
                        kQueueName,
@@ -287,25 +289,33 @@ SimulationRunStats do_web_server(float lambda,
 
     auto cpu_queue = Queue(max_cpu_queue_customers,
                            exit_customer,
-                           ExponentialGenerator(kCpuMu, cpu_service_seed),
+                           [gen = ExponentialGenerator(kCpuMu, cpu_service_seed)] {
+                               return gen.generate();
+                           },
                            [&timer]{ return timer.time(); },
                            queueing::Discipline::FCFS,
                            kCpuQueueName);
     auto io_queue_1 = Queue(max_io_queue_customers,
                             exit_customer,
-                            ExponentialGenerator(kIoMu, io_service_seed_1),
+                            [gen = ExponentialGenerator(kIoMu, io_service_seed_1)] {
+                               return gen.generate();
+                            },
                             [&timer]{ return timer.time(); },
                             queueing::Discipline::FCFS,
                             kIoQueueName1);
     auto io_queue_2 = Queue(max_io_queue_customers,
                             exit_customer,
-                            ExponentialGenerator(kIoMu, io_service_seed_2),
+                            [gen = ExponentialGenerator(kIoMu, io_service_seed_2)] {
+                               return gen.generate();
+                            },
                             [&timer]{ return timer.time(); },
                             queueing::Discipline::FCFS,
                             kIoQueueName2);
     auto io_queue_3 = Queue(max_io_queue_customers,
                             exit_customer,
-                            ExponentialGenerator(kIoMu, io_service_seed_3),
+                            [gen = ExponentialGenerator(kIoMu, io_service_seed_3)] {
+                               return gen.generate();
+                            },
                             [&timer]{ return timer.time(); },
                             queueing::Discipline::FCFS,
                             kIoQueueName3);
