@@ -31,6 +31,7 @@ while (dummy == 0.0);
 }
 // ------------------- END CODE FROM LECTURE MATERIAL -----------
 
+// TODO: these don't have to be classes, they could just be functions that return lambdas
 float ExponentialGenerator::generate() const
 {
    // will modify seed
@@ -40,4 +41,20 @@ float ExponentialGenerator::generate() const
 float UniformGenerator::generate() const
 {
    return ran0(&seed_);
+}
+
+double BoundedParetoGenerator::generate() const
+{
+   // compute using inverse of CDF and uniform var
+   double uniform;
+   do {
+      // uniform being 1 makes nan
+      // (-1e-11) ^ (-.909091) is imaginary
+      uniform = ran0(&seed_);
+   } while (uniform == 1.0);
+
+   double base = (h_to_the_alpha_ - l_to_the_alpha_plus_h_to_the_alpha_*uniform)
+                 / l_to_the_alpha_times_h_to_the_alpha_;
+
+   return pow(base, negative_one_over_alpha_);
 }

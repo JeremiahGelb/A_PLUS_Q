@@ -113,5 +113,6 @@ void test_priority_generator();
 void test_spy();
 void test_prio_p_queue();
 void test_spy_odd_entrances();
+void test_bounded_pareto();
 
 } // testing

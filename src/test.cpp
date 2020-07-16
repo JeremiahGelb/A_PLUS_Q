@@ -47,7 +47,8 @@ void run_all_tests()
         std::make_pair("Priority Non Preempt", test_prio_np_queue),
         std::make_pair("Priority Preempt", test_prio_p_queue),
         std::make_pair("Spy", test_spy),
-        std::make_pair("Spy Odd", test_spy_odd_entrances)
+        std::make_pair("Spy Odd", test_spy_odd_entrances),
+        std::make_pair("Bounded Pareto", test_bounded_pareto)
     };
 
     auto failure_count = 0;
@@ -1324,6 +1325,34 @@ void test_spy_odd_entrances()
 
     ASSERT_EQ(waiting_times[SimulationRunStats::all_queues()][SimulationRunStats::all_priorities()], float(7.0/3), "all qs avg correct wt");
     ASSERT_EQ(waiting_times[SimulationRunStats::all_queues()][1], float(7.0/3), "all qs p1 correct wt");
+}
+
+void test_bounded_pareto()
+{
+    constexpr double kLowerBound = 332;
+    constexpr double kUpperBound = 1e10;
+    constexpr double kAlpha = 1.1;
+    BoundedParetoGenerator generator(kLowerBound, kUpperBound, kAlpha);
+
+    constexpr auto kNumbersToGenerate = 100'000'000;
+    double min = INFINITY;
+    double max = 0;
+    long double mean = 0;
+
+    for (auto i = 0; i < kNumbersToGenerate; ++i) {
+        auto generated_number = generator.generate();
+        if (generated_number < min) {
+            min = generated_number;
+        }
+        if (generated_number > max) {
+            max = generated_number;
+        }
+
+        mean += generated_number / kNumbersToGenerate;
+    }
+
+    std::cout << min << " " << max << " " << mean << std::endl;
+    // figure out what to assert
 }
 
 } // testing
