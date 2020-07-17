@@ -79,7 +79,7 @@ std::string confidence_interval_string(const Container & items)
 
     constexpr auto z_for_95_percent_confidence = 1.960;
 
-    auto offset = variance / sqrt(items.size());
+    auto offset = z_for_95_percent_confidence * sqrt(variance) / sqrt(items.size());
 
     std::stringstream ss;
     ss << mean << " ± " << offset;
