@@ -48,6 +48,7 @@ public:
     {}
 
     double generate() const override;
+    double percentile_to_value(double percentile) const;
 private:
     double h_to_the_alpha_;
     double l_to_the_alpha_;

@@ -54,7 +54,12 @@ double BoundedParetoGenerator::generate() const
    // (-1e-11) ^ (-.909091) is imaginary
    uniform -= uniform == 1;
 
-   double base = (h_to_the_alpha_ - l_to_the_alpha_plus_h_to_the_alpha_*uniform)
+   return percentile_to_value(uniform);
+}
+
+double BoundedParetoGenerator::percentile_to_value(double percentile) const
+{
+   double base = (h_to_the_alpha_ - l_to_the_alpha_plus_h_to_the_alpha_*percentile)
                  / l_to_the_alpha_times_h_to_the_alpha_;
 
    return pow(base, negative_one_over_alpha_);
