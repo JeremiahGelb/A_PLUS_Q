@@ -10,10 +10,14 @@ class SimulationRunStats {
 public:
     SimulationRunStats(const queue_name_to_priority_to_stat & customer_loss_rates,
                        const queue_name_to_priority_to_stat & average_waiting_times,
-                       float average_system_time)
+                       float average_system_time,
+                       float average_service_time,
+                       float simulation_end_time)
     : customer_loss_rates_(customer_loss_rates)
     , average_waiting_times_(average_waiting_times)
     , average_system_time_(average_system_time)
+    , average_service_time_(average_service_time)
+    , simulation_end_time_(simulation_end_time)
     {}
 
     queue_name_to_priority_to_stat customer_loss_rates()
@@ -31,6 +35,16 @@ public:
         return average_system_time_;
     }
 
+    float average_service_time()
+    {
+        return average_service_time_;
+    }
+
+    float simulation_end_time()
+    {
+        return simulation_end_time_;
+    }
+
     static std::uint32_t all_priorities() {
         return UINT32_MAX;
     }
@@ -43,6 +57,8 @@ private:
     queue_name_to_priority_to_stat customer_loss_rates_;
     queue_name_to_priority_to_stat average_waiting_times_;
     float average_system_time_;
+    float average_service_time_;
+    float simulation_end_time_;
 };
 
 namespace statistics {

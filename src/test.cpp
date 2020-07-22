@@ -1334,13 +1334,14 @@ void test_bounded_pareto()
     constexpr double kAlpha = 1.1;
     BoundedParetoGenerator generator(kLowerBound, kUpperBound, kAlpha);
 
-    constexpr auto kNumbersToGenerate = 100'000'000;
+    constexpr auto kNumbersToGenerate = 10'000'000;
     double min = INFINITY;
     double max = 0;
     long double mean = 0;
 
     for (auto i = 0; i < kNumbersToGenerate; ++i) {
         auto generated_number = generator.generate();
+
         if (generated_number < min) {
             min = generated_number;
         }
@@ -1351,8 +1352,10 @@ void test_bounded_pareto()
         mean += generated_number / kNumbersToGenerate;
     }
 
-    std::cout << min << " " << max << " " << mean << std::endl;
-    // figure out what to assert
+    ASSERT_GT(min, double(331.9999));
+    ASSERT_LT(max, double(1e10));
+    ASSERT_GT(mean, double(2800));
+    ASSERT_LT(mean, double(3200));
 }
 
 } // testing

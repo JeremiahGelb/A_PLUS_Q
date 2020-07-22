@@ -47,11 +47,12 @@ double BoundedParetoGenerator::generate() const
 {
    // compute using inverse of CDF and uniform var
    double uniform;
-   do {
-      // uniform being 1 makes nan
-      // (-1e-11) ^ (-.909091) is imaginary
-      uniform = ran0(&seed_);
-   } while (uniform == 1.0);
+
+   uniform = ran0(&seed_);
+
+   // uniform being 1 makes nan
+   // (-1e-11) ^ (-.909091) is imaginary
+   uniform -= uniform == 1;
 
    double base = (h_to_the_alpha_ - l_to_the_alpha_plus_h_to_the_alpha_*uniform)
                  / l_to_the_alpha_times_h_to_the_alpha_;

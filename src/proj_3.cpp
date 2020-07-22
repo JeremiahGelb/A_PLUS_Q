@@ -37,6 +37,8 @@ void run_project_3(float lambda,
     std::map<std::string, std::map<std::uint32_t, std::vector<float>>> customer_loss_rates;
     std::map<std::string, std::map<std::uint32_t, std::vector<float>>> average_waiting_times;
     std::vector<float> system_times;
+    std::vector<float> service_times;
+    std::vector<float> run_times;
     for (auto i = 0; i < runs; ++i) {
         if (constants::PRINT_STATS) {
             std::cout << std::endl << "STARTING RUN: " << i << std::endl;
@@ -67,45 +69,31 @@ void run_project_3(float lambda,
         }
 
         system_times.push_back(stat.average_system_time());
+        service_times.push_back(stat.average_service_time());
+        run_times.push_back(stat.simulation_end_time());
 
         if (constants::PRINT_STATS) {
             std::cout << std::endl << "ENDING RUN: " << i << std::endl;
         }
     }
 
-    auto to_string = [] (std::uint32_t priority) {
-        if (priority == SimulationRunStats::all_priorities()) {
-            return std::string("AVERAGE");
-        } else {
-            return std::to_string(priority);
-        }
-    };
-
     if (constants::PRINT_STATS) {
-        std::cout << std::endl << "Customer Loss Rates:" << std::endl;
-        for (const auto & name_and_clr_vector_map : customer_loss_rates) {
-            std::cout << name_and_clr_vector_map.first << ":" << std::endl;
+        std::cout << "Lambda: " << lambda << std::endl;
+        std::cout << "C: " << customers_to_serve << std::endl;
 
-            for (const auto & priority_and_clr : name_and_clr_vector_map.second) {
-                std::cout << "    Priority_" << to_string(priority_and_clr.first) << ":"
-                          << " CLR: " << statistics::confidence_interval_string(priority_and_clr.second)
-                          << std::endl;
-            }
-        }
-        std::cout << std::endl;
+        std::cout << "Master Clock Value: "
+                  << statistics::confidence_interval_string(run_times)
+                  << std::endl;
 
-        std::cout << std::endl << "Waiting Times: " << std::endl;
+        std::cout << "Waiting Time: "
+                  << statistics::confidence_interval_string(average_waiting_times
+                                                            .at(SimulationRunStats::all_queues())
+                                                            .at(SimulationRunStats::all_priorities()))
+                  << std::endl;
 
-        for (const auto & name_and_time_vector_map : average_waiting_times) {
-            std::cout << name_and_time_vector_map.first << ":" << std::endl;
-
-            for (const auto & priority_and_time : name_and_time_vector_map.second) {
-                std::cout << "    Priority_" << to_string(priority_and_time.first) << ":"
-                          << " Waiting Time: " << statistics::confidence_interval_string(priority_and_time .second)
-                          << std::endl;
-            }
-        }
-        std::cout << std::endl;
+        std::cout << "Service Time "
+                  << statistics::confidence_interval_string(service_times)
+                  << std::endl;
 
         std::cout << "System Time "
                   << statistics::confidence_interval_string(system_times)
@@ -120,7 +108,6 @@ SimulationRunStats do_one_run(float lambda,
                               Mode mode,
                               long seed_offset)
 {
-    constexpr float kMu = 1.0/3000;
     long arrival_seed = 1111 + seed_offset;
     long service_seed = 2222 + seed_offset;
     long load_balancer_seed = 6666 + seed_offset;
@@ -146,7 +133,10 @@ SimulationRunStats do_one_run(float lambda,
 
 
 
-
+    constexpr float kMu = 1.0/3000;
+    constexpr double kLowerBound = 332;
+    constexpr double kUpperBound = 1e10;
+    constexpr double kAlpha = 1.1;
     std::function<float()> service_time_generator;
     switch(mode) {
     case Mode::MM3:
@@ -156,7 +146,12 @@ SimulationRunStats do_one_run(float lambda,
         break;
     case Mode::MG3:
     case Mode::MG1:
-        throw std::runtime_error("TODO pareto");
+        service_time_generator = [gen = BoundedParetoGenerator(kLowerBound,
+                                                               kUpperBound,
+                                                               kAlpha,
+                                                               service_seed)] {
+            return gen.generate();
+        };
         break;
     }
 
@@ -211,7 +206,9 @@ SimulationRunStats do_one_run(float lambda,
 
     return SimulationRunStats(spy.customer_loss_rates(),
                               spy.average_waiting_times(),
-                              spy.average_system_time());
+                              spy.average_system_time(),
+                              spy.average_service_time(),
+                              timer.time());
 }
 
 } // project3

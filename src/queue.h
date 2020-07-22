@@ -6,6 +6,7 @@
 #include <vector>
 #include <iostream>
 #include <map>
+#include <list>
 
 #include "constants.h"
 #include "customer.h"
@@ -186,7 +187,7 @@ private:
     }
 
 
-    std::vector<std::shared_ptr<Customer>> & lowest_non_empty_customer_vector()
+    std::list<std::shared_ptr<Customer>> & lowest_non_empty_customer_vector()
     {
         for (auto & priority_and_customer_vector : customers_) {
             if (!priority_and_customer_vector.second.empty()) {
@@ -260,7 +261,7 @@ private:
     std::size_t max_vector_size_;
     CustomerRequest exit_customer_;
     std::queue<std::function<void(std::shared_ptr<Customer>)>> requests_;
-    std::map<std::uint32_t , std::vector<std::shared_ptr<Customer>>> customers_;
+    std::map<std::uint32_t , std::list<std::shared_ptr<Customer>>> customers_;
     std::function<float()> generate_service_time_;
     const std::function<float()> current_time_;
     queueing::Discipline discipline_;
