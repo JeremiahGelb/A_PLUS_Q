@@ -3,6 +3,7 @@
 #include <sstream>
 #include <tgmath.h>
 #include <unordered_map>
+#include <array>
 
 using queue_name_to_priority_to_stat = std::unordered_map<std::string, std::unordered_map<std::uint32_t, float>>;
 
@@ -12,12 +13,14 @@ public:
                        const queue_name_to_priority_to_stat & average_waiting_times,
                        float average_system_time,
                        float average_service_time,
-                       float simulation_end_time)
+                       float simulation_end_time,
+                       const std::array<float, 100> & average_slowdown_percentiles)
     : customer_loss_rates_(customer_loss_rates)
     , average_waiting_times_(average_waiting_times)
     , average_system_time_(average_system_time)
     , average_service_time_(average_service_time)
     , simulation_end_time_(simulation_end_time)
+    , average_slowdown_percentiles_(average_slowdown_percentiles)
     {}
 
     queue_name_to_priority_to_stat customer_loss_rates()
@@ -45,6 +48,11 @@ public:
         return simulation_end_time_;
     }
 
+    const std::array<float, 100> & average_slowdown_percentiles()
+    {
+        return average_slowdown_percentiles_;
+    }
+
     static std::uint32_t all_priorities() {
         return UINT32_MAX;
     }
@@ -59,6 +67,7 @@ private:
     float average_system_time_;
     float average_service_time_;
     float simulation_end_time_;
+    std::array<float, 100> average_slowdown_percentiles_;
 };
 
 namespace statistics {

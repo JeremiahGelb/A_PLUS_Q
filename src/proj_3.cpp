@@ -23,6 +23,28 @@ queueing::Discipline to_discipline(project3::Discipline discipline)
     }
 }
 
+std::string to_string(project3::Discipline discipline)
+{
+    switch (discipline) {
+    case project3::Discipline::FCFS:
+        return "FCFS";
+    case project3::Discipline::SJF_NP:
+        return "SJF_NP";
+    }
+}
+
+std::string to_string(project3::Mode mode)
+{
+    switch (mode) {
+    case project3::Mode::MG1:
+        return "MG1";
+    case project3::Mode::MG3:
+        return "MG3";
+    case project3::Mode::MM3:
+        return "MM3";
+    }
+}
+
 } // annonymous
 
 
@@ -39,6 +61,7 @@ void run_project_3(float lambda,
     std::vector<float> system_times;
     std::vector<float> service_times;
     std::vector<float> run_times;
+    std::array<std::vector<float>, 100> slowdown_percentiles = {}; // each index holds vector of same percentile from each run
     for (auto i = 0; i < runs; ++i) {
         if (constants::PRINT_STATS) {
             std::cout << std::endl << "STARTING RUN: " << i << std::endl;
@@ -72,12 +95,20 @@ void run_project_3(float lambda,
         service_times.push_back(stat.average_service_time());
         run_times.push_back(stat.simulation_end_time());
 
+        auto & run_slowdown_percentiles = stat.average_slowdown_percentiles();
+        for (auto percentile = 0; percentile < 100; ++percentile) {
+            slowdown_percentiles[percentile].push_back(run_slowdown_percentiles[percentile]);
+        }
+
         if (constants::PRINT_STATS) {
             std::cout << std::endl << "ENDING RUN: " << i << std::endl;
         }
     }
 
     if (constants::PRINT_STATS) {
+        std::cout << "Mode: " << to_string(mode) << std::endl;
+        std::cout << "Discipline: " << to_string(discipline) << std::endl;
+
         std::cout << "Lambda: " << lambda << std::endl;
         std::cout << "C: " << customers_to_serve << std::endl;
 
@@ -98,6 +129,12 @@ void run_project_3(float lambda,
         std::cout << "System Time "
                   << statistics::confidence_interval_string(system_times)
                   << std::endl;
+
+        /*
+        for (auto percentile = 0; percentile < 100; ++percentile) {
+            std::cout << statistics::confidence_interval_string(slowdown_percentiles[percentile]) << std::endl;
+        }
+        */
     }
 }
 
@@ -153,7 +190,8 @@ SimulationRunStats do_one_run(float lambda,
     auto spy = SimulationSpy(stats_index,
                              kInitialReserve,
                              {kQueueName},
-                             kTransientPeriod);
+                             kTransientPeriod,
+                             percentile_to_service_time);
 
     auto exit_customer = [&spy] (const std::shared_ptr<Customer> & customer) {
         spy.on_customer_exiting(customer);
@@ -212,12 +250,12 @@ SimulationRunStats do_one_run(float lambda,
         timer.advance_time();
     }
 
-    for (const auto i : )
     return SimulationRunStats(spy.customer_loss_rates(),
                               spy.average_waiting_times(),
                               spy.average_system_time(),
                               spy.average_service_time(),
-                              timer.time());
+                              timer.time(),
+                              spy.average_slowdown_percentiles());
 }
 
 } // project3

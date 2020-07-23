@@ -126,8 +126,8 @@ void SimulationSpy::save_slowdown(float waiting_time, float system_time)
     int percentile = 0;
 
     // consider using binary search or stl algorithm
-    for(; percentile < 100; ++percentile) {
-        if (system_time <= service_time_percentile_to_value_((percentile + 1) * .0999)) {
+    for(; percentile < 99; ++percentile) {
+        if (system_time <= service_time_percentile_to_value_((percentile + 1) * .009999999999999)) {
             break;
         }
     }

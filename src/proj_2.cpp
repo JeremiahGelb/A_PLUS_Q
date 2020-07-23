@@ -247,7 +247,8 @@ SimulationRunStats do_m_m_1_k(float lambda,
                               spy.average_waiting_times(),
                               spy.average_system_time(),
                               spy.average_service_time(),
-                              timer.time());
+                              timer.time(),
+                              {});
 }
 
 SimulationRunStats do_web_server(float lambda,
@@ -393,7 +394,8 @@ SimulationRunStats do_web_server(float lambda,
                               spy.average_waiting_times(),
                               spy.average_system_time(),
                               spy.average_service_time(),
-                              timer.time());
+                              timer.time(),
+                              {});
 }
 
 } // project2
