@@ -121,13 +121,13 @@ public:
                 break;
             case queueing::Discipline::SJF_NP:
             {
-                auto pos = priority_vector.begin();
-                for (; pos != priority_vector.end(); ++pos) {
-                    if (customer->service_time() > (*pos)->service_time()) {
+                auto pos = priority_vector.rbegin();
+                for (; pos != priority_vector.rend(); ++pos) {
+                    if (customer->service_time() <= (*pos)->service_time()) {
                         break;
                     }
                 }
-                priority_vector.insert(pos, customer);
+                priority_vector.insert(pos.base(), customer);
                 break;
             }
             case queueing::Discipline::PRIO_NP:

@@ -484,6 +484,21 @@ void test_sjf_queue()
     insert(make_customer(0, 1.1));
     insert(make_customer(1, 1.1));
     insert(make_customer(2, 1.1));
+    insert(make_customer(3, 1.1));
+    insert(make_customer(4, 1.1));
+    insert(make_customer(5, 1.1));
+    insert(make_customer(6, 1.1));
+    insert(make_customer(7, 1.1));
+    insert(make_customer(8, 1.1));
+    insert(make_customer(9, 1.1));
+
+    queue.request_one_customer(request);
+    queue.request_one_customer(request);
+    queue.request_one_customer(request);
+    queue.request_one_customer(request);
+    queue.request_one_customer(request);
+    queue.request_one_customer(request);
+    queue.request_one_customer(request);
     queue.request_one_customer(request);
     queue.request_one_customer(request);
     queue.request_one_customer(request);
