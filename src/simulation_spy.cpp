@@ -90,6 +90,9 @@ void SimulationSpy::save_default_stats(const std::shared_ptr<Customer> & custome
         }
         total_service_time_ += customer->service_time();
         total_system_time_ += customer->system_time();
+        if (service_time_percentile_to_value_) {
+            save_slowdown(customer->total_waiting_time(), customer->service_time());
+        }
     } else {
         const auto & dropper = customer->dropped_by();
         losses_by_queue_[dropper][priority] += 1;
@@ -116,6 +119,36 @@ void SimulationSpy::save_additional_stats(const std::shared_ptr<Customer> & cust
        << system_customers_.size();
 
     additional_stats_.push_back(ss.str());
+}
+
+void SimulationSpy::save_slowdown(float waiting_time, float system_time)
+{
+    int percentile = 0;
+
+    // consider using binary search or stl algorithm
+    for(; percentile < 100; ++percentile) {
+        if (system_time <= service_time_percentile_to_value_((percentile + 1) * .0999)) {
+            break;
+        }
+    }
+
+    auto &[total_slowdown, customer_count] = total_slowdown_and_customer_count_by_service_time_percentile_.at(percentile);
+
+    total_slowdown += waiting_time / system_time;
+    ++customer_count;
+}
+
+std::array<float, 100> SimulationSpy::average_slowdown_percentiles()
+{
+    std::array<float, 100> average_slowdown_percentiles;
+    std::transform(total_slowdown_and_customer_count_by_service_time_percentile_.begin(),
+                   total_slowdown_and_customer_count_by_service_time_percentile_.end(),
+                   average_slowdown_percentiles.begin(),
+                   [] (const std::pair<float, std::uint32_t> & slowdown_and_count) {
+                       return slowdown_and_count.first / slowdown_and_count.second;
+                   });
+
+    return average_slowdown_percentiles;
 }
 
 float SimulationSpy::average_service_time() const

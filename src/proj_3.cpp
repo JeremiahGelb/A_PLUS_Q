@@ -114,8 +114,39 @@ SimulationRunStats do_one_run(float lambda,
 
     SimulationTimer timer;
 
-    const std::string kQueueName = "QUEUE";
+    constexpr float kMu = 1.0/3000;
+    constexpr double kLowerBound = 332;
+    constexpr double kUpperBound = 1e10;
+    constexpr double kAlpha = 1.1;
+    std::function<float()> service_time_generator;
+    std::function<double(double)> percentile_to_service_time;
+    switch(mode) {
+    case Mode::MM3:
+        service_time_generator = [gen = ExponentialGenerator(kMu, service_seed)] {
+            return gen.generate();
+        };
+        percentile_to_service_time = nullptr; // could make this for exponential if needed
+        break;
+    case Mode::MG3:
+    case Mode::MG1:
+        service_time_generator = [gen = BoundedParetoGenerator(kLowerBound,
+                                                               kUpperBound,
+                                                               kAlpha,
+                                                               service_seed)] {
+            return gen.generate();
+        };
 
+        percentile_to_service_time = [gen = BoundedParetoGenerator(kLowerBound,
+                                                                   kUpperBound,
+                                                                   kAlpha,
+                                                                   service_seed)] (float percentile) {
+            return gen.percentile_to_value(percentile);
+        };
+
+        break;
+    }
+
+    const std::string kQueueName = "QUEUE";
     constexpr std::size_t stats_index = 0; // used for project 1
     constexpr auto kTransientPeriod = 1000;
     constexpr auto kInitialReserve = 1000; // arbitrary
@@ -131,29 +162,6 @@ SimulationRunStats do_one_run(float lambda,
     auto incoming_customers = IncomingCustomers(timer,
                                                 ExponentialGenerator(lambda, arrival_seed));
 
-
-
-    constexpr float kMu = 1.0/3000;
-    constexpr double kLowerBound = 332;
-    constexpr double kUpperBound = 1e10;
-    constexpr double kAlpha = 1.1;
-    std::function<float()> service_time_generator;
-    switch(mode) {
-    case Mode::MM3:
-        service_time_generator = [gen = ExponentialGenerator(kMu, service_seed)] {
-            return gen.generate();
-        };
-        break;
-    case Mode::MG3:
-    case Mode::MG1:
-        service_time_generator = [gen = BoundedParetoGenerator(kLowerBound,
-                                                               kUpperBound,
-                                                               kAlpha,
-                                                               service_seed)] {
-            return gen.generate();
-        };
-        break;
-    }
 
     Queue queue(SIZE_MAX,
                 exit_customer,
@@ -204,6 +212,7 @@ SimulationRunStats do_one_run(float lambda,
         timer.advance_time();
     }
 
+    for (const auto i : )
     return SimulationRunStats(spy.customer_loss_rates(),
                               spy.average_waiting_times(),
                               spy.average_system_time(),
