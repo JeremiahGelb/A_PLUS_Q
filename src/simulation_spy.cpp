@@ -121,20 +121,20 @@ void SimulationSpy::save_additional_stats(const std::shared_ptr<Customer> & cust
     additional_stats_.push_back(ss.str());
 }
 
-void SimulationSpy::save_slowdown(float waiting_time, float system_time)
+void SimulationSpy::save_slowdown(float waiting_time, float service_time)
 {
     int percentile = 0;
 
     // consider using binary search or stl algorithm
     for(; percentile < 99; ++percentile) {
-        if (system_time <= service_time_percentile_to_value_((percentile + 1) * .009999999999999)) {
+        if (service_time <= service_time_percentile_to_value_((percentile + 1) * .009999999999999)) {
             break;
         }
     }
 
     auto &[total_slowdown, customer_count] = total_slowdown_and_customer_count_by_service_time_percentile_.at(percentile);
 
-    total_slowdown += waiting_time / system_time;
+    total_slowdown += waiting_time / service_time;
     ++customer_count;
 }
 
