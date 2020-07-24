@@ -61,6 +61,20 @@ L = Select mode (0 is mm1k, 1 is CPU)
 M = Select Discipline (1 – FCFS, 2 – LCFS-NP, 3 – SJF-NP, 4 – Prio-NP, 5 – Prio-P)
 ```
 
+## Run Project 3
+Exploration of arbitrary service time distribution using bounded pareto distribution with min = 332, max = 10^10, and alpha = 1.1 leading to mean of 3000
+
+Compare with exponential distribution with the same mean.
+
+```
+./run.o --proj3 Lambda C L M
+
+Lambda -> parameter of exponetially distributed inter-arival times
+C = customers to serve before exiting
+L = Discipline (1 for FCFS, 2 for SJF_NP)
+M = Mode (0 = MM3, 1 = MG3, 2 = MG1)
+```
+
 ## TEST
 ```
 ./run.o --test
