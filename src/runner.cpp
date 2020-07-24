@@ -12,6 +12,8 @@
 
 void print_help_text(std::string_view error = "")
 {
+    std::cout << std::endl;
+
     if (!error.empty()) {
         std::cout << error << std::endl;
     }
