@@ -1,5 +1,5 @@
 # A_PLUS_Q
-Queuing simulation for ECE 579
+Queuing simulation for a class I took at school
 
 ## BUILD
 ```
